@@ -16,17 +16,36 @@ $queue = require __DIR__ . DS . '..' . DS . 'bootstrap.php';
 
 use Symfony\Component\Process\Process;
 
+/**
+ * Worker config
+ */
 $maxWorkers = 64;
 $workerSlots = [];
 
-while($job = $queue->getNextJob())
+/**
+ * Exit the main loop?
+ */
+$shouldExit = false;
+
+/**
+ * Main loop
+ */
+while(!$shouldExit)
 {
 	usleep(10000);
 
 	// check the worker status
-	foreach($workerSlots as $i => $process) {
-		if (!$process->isRunning()) {
-			unset($workerSlots[$i]);
+	foreach($workerSlots as $jobId => $process) 
+	{
+		if (!$process->isRunning()) 
+		{
+			// if the process failed we might retry
+			if (!$process->isSuccessful()) {
+				$queue->considerRetry($jobId);
+			}
+
+			echo $process->getOutput();
+			unset($workerSlots[$jobId]);
 		}
 	}
 
@@ -34,8 +53,13 @@ while($job = $queue->getNextJob())
 		continue;
 	}
 
-	$process = new Process('php ' . __DIR__ . '/worker');
+	// get the next job
+	if (!$jobId = $queue->getNextJobId()) {
+		continue;
+	}
+
+	$process = new Process('php ' . __DIR__ . '/worker ' . $jobId);
 	$process->start();
 
-	$workerSlots[] = $process;
+	$workerSlots[$jobId] = $process;
 }

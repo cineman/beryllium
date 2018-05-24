@@ -14,12 +14,5 @@ set_time_limit(0);
  */
 $queue = require __DIR__ . DS . '..' . DS . 'bootstrap.php';
 
-// throw away the command..
-array_shift($argv);
 
-/**
- * Get the ID of the work that needs to be done, and get it done.
- */
-$id = array_shift($argv);
-
-echo $id . "\n";
+$queue->add('foo');
