@@ -1,0 +1,23 @@
+{
+    "name": "cineman/beryllium",
+    "authors": [
+        {
+            "name": "Mario Döring",
+            "email": "mario@clancats.com"
+        }
+    ],
+    "require": {
+    },
+    "autoload": {
+        "psr-4": {
+        	"Beryllium\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Beryllium\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
