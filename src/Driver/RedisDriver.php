@@ -72,33 +72,58 @@ class RedisDriver implements DriverInterface
 	 *
 	 * @return string
 	 */
-	public function getWaitingId() : ?string
+	public function popWaitingId() : ?string
 	{
 		return $this->redis->rPop(static::PREFIX . static::WAITLIST) ?: null;
 	}
 
+	/**
+	 * Reinsert the job into the waitlist
+	 *
+	 * @param string 			$id
+	 * @return void
+	 */
 	public function retry(string $id)
 	{
-		$this->redis->incr('queue.attempt.' . $id);
-		$this->redis->lPush('queue.waitlist', $id);
+		$this->redis->incr(static::PREFIX . static::ATTEMPT . $id);
+		$this->redis->lPush(static::PREFIX . static::WAITLIST, $id);
 	}
 
+	/**
+	 * Get the maximum number of attempts we should try for the job
+	 *
+	 * @param string 				$id
+	 * @return int
+	 */
 	public function getMaxRetries(string $id) : int
 	{
-		return $this->redis->get('queue.max_retries.' . $id);
+		if (($c = $this->redis->get(static::PREFIX . static::MAX_RETRIES . $id)) !== false) return $c;
+		return -1;
 	}
 
+	/**
+	 * Get the number of attempts for the job
+	 *
+	 * @param string 			$id
+	 * @return int
+	 */
 	public function attemptCount(string $id) : int
 	{
-		return $this->redis->get('queue.attempt.' . $id);
+		if (($c = $this->redis->get(static::PREFIX . static::ATTEMPT . $id)) !== false) return $c;
+		return -1;
 	}
 
+	/**
+	 * Cleanup the jobs data
+	 *
+	 * @param string 			$id
+	 */
 	public function cleanup(string $id)
 	{
 		$this->redis->delete([
-			'queue.attempt.' . $id,
-			'queue.max_retries.' . $id,
-			'queue.data.' . $id,
+			static::PREFIX . static::ATTEMPT . $id,
+			static::PREFIX . static::MAX_RETRIES . $id,
+			static::PREFIX . static::DATA . $id,
 		]);
 	}
 

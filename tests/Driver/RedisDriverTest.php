@@ -53,21 +53,21 @@ class RedisDriverTest extends \PHPUnit\Framework\TestCase
 	/**
      * @dataProvider redisDriverProvider
      */
-	public function testGetWaitingId(RedisDriver $driver)
+	public function testpopWaitingId(RedisDriver $driver)
 	{
 		$driver->clearEverything(); // make sure to clear the data
 
 		// should be null because no jobs should be queued
-		$this->assertNull($driver->getWaitingId());
+		$this->assertNull($driver->popWaitingId());
 
 		// enqueue some jobs
 		$driver->add(new Job('test1', 'say', ['text' => 'hello']));
 		$driver->add(new Job('test2', 'say', ['text' => 'world']));
 		$driver->add(new Job('test3', 'say', ['text' => 'queue']));
 
-		$job1 = $driver->get($driver->getWaitingId());
-		$job2 = $driver->get($driver->getWaitingId());
-		$job3 = $driver->get($driver->getWaitingId());
+		$job1 = $driver->get($driver->popWaitingId());
+		$job2 = $driver->get($driver->popWaitingId());
+		$job3 = $driver->get($driver->popWaitingId());
 
 		$this->assertEquals('test1', $job1->id());
 		$this->assertEquals('test2', $job2->id());
@@ -80,5 +80,41 @@ class RedisDriverTest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals('hello', $job1->parameter('text'));
 		$this->assertEquals('world', $job2->parameter('text'));
 		$this->assertEquals('queue', $job3->parameter('text'));
+	}
+
+	/**
+     * @dataProvider redisDriverProvider
+     */
+	public function testRetry(RedisDriver $driver)
+	{
+		$driver->clearEverything(); // make sure to clear the data
+
+		// enqueue some jobs
+		$driver->add(new Job('test1', 'say', ['text' => 'hello']));
+
+		$this->assertEquals('test1', $driver->popWaitingId());
+		$this->assertEquals(0, $driver->attemptCount('test1'));
+
+		// queue should be empty now.
+		$this->assertNull($driver->popWaitingId());
+
+		// reinsert the job
+		$driver->retry('test1');
+
+		// job should appear again
+		// number of attempts should have increased
+		$this->assertEquals('test1', $driver->popWaitingId());
+		$this->assertEquals(1, $driver->attemptCount('test1'));
+	}
+
+	/**
+     * @dataProvider redisDriverProvider
+     */
+	public function testAttemptCountAndMaxEmpty(RedisDriver $driver)
+	{
+		$driver->clearEverything(); // make sure to clear the data
+		
+		$this->assertEquals(-1, $driver->attemptCount('unknown'));
+		$this->assertEquals(-1, $driver->getMaxRetries('unknown'));
 	}
 }
