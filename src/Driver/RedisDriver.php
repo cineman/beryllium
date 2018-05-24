@@ -1,0 +1,115 @@
+<?php 
+
+namespace Beryllium\Driver;
+
+use Redis;
+use Beryllium\Job;
+
+class RedisDriver implements DriverInterface
+{	
+	/** 
+	 * Get the redis connection
+	 *
+	 * @var Redis
+	 */
+	protected $redis;
+
+	/**
+	 * The storage prefix
+	 */
+	const PREFIX = 'queue.';
+	const WAITLIST = 'waitlist';
+	const ATTEMPT = 'attempt.';
+	const MAX_RETRIES = 'max_retries.';
+	const DATA = 'data.';
+
+	/**
+	 * Construct
+	 *
+	 * @param Redis 			$redis 
+	 */
+	public function __construct(Redis $redis)
+	{
+		$this->redis = $redis;
+	}
+
+	/**
+	 * Add a job to the queue
+	 *
+	 * @param Job 			$job
+	 * @param int 			$maxRetries
+	 */
+	public function add(Job $job, int $maxRetries = 3)
+	{
+		$id = $job->id(); // get the job id
+
+		$this->redis->lPush(static::PREFIX . static::WAITLIST, $id);
+
+		$this->redis->set(static::PREFIX . static::ATTEMPT . $id, 0);
+		$this->redis->set(static::PREFIX . static::MAX_RETRIES . $id, $maxRetries);
+		$this->redis->set(static::PREFIX . static::DATA . $id, $job->serialize());
+	}
+
+	/**
+	 * Get a job by id
+	 *
+	 * @param string 			$id
+	 * @return Job
+	 */
+	public function get(string $id) : ?Job
+	{
+		// get the data
+		if (!$data = $this->redis->get(static::PREFIX . static::DATA . $id)) {
+			return null;
+		}
+
+		// unserialize it
+		return Job::unserialize($data);
+	}
+
+	/**
+	 * Get the ID of a waiting job
+	 *
+	 * @return string
+	 */
+	public function getWaitingId() : ?string
+	{
+		return $this->redis->rPop(static::PREFIX . static::WAITLIST) ?: null;
+	}
+
+	public function retry(string $id)
+	{
+		$this->redis->incr('queue.attempt.' . $id);
+		$this->redis->lPush('queue.waitlist', $id);
+	}
+
+	public function getMaxRetries(string $id) : int
+	{
+		return $this->redis->get('queue.max_retries.' . $id);
+	}
+
+	public function attemptCount(string $id) : int
+	{
+		return $this->redis->get('queue.attempt.' . $id);
+	}
+
+	public function cleanup(string $id)
+	{
+		$this->redis->delete([
+			'queue.attempt.' . $id,
+			'queue.max_retries.' . $id,
+			'queue.data.' . $id,
+		]);
+	}
+
+	/**
+	 * Will clear freaking everything
+	 * !!! Attention with this one..
+	 * 
+	 * @return void
+	 */
+	public function clearEverything()
+	{
+		$this->redis->delete($this->redis->keys(static::PREFIX . '*'));
+	}
+}

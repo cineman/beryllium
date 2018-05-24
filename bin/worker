@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+if (!defined('DS')) { define('DS', DIRECTORY_SEPARATOR); }
+
+// make sure we never run out of time.
+set_time_limit(0);
+
+/**
+ *---------------------------------------------------------------
+ * Bootstrap
+ *---------------------------------------------------------------
+ *
+ * We need what we need
+ */
+$queue = require __DIR__ . DS . '..' . DS . 'bootstrap.php';
+
+// throw away the command..
+array_shift($argv);
+
+/**
+ * Get the ID of the work that needs to be done, and get it done.
+ */
+$id = array_shift($argv);
+
+$redis = new Redis();
+$redis->pconnect(BERYLLIUM_REDIS_HOST, BERYLLIUM_REDIS_PORT);
+
+$redis->incr('queue');

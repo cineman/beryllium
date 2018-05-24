@@ -1,5 +1,5 @@
-<?php 
-if (!defined('DS')) { define('DS', DIRECTORY_SEPARATOR); }
+<?php if (!defined('DS')) { define('DS', DIRECTORY_SEPARATOR); }
+
 /**
  *---------------------------------------------------------------
  * Autoloader / Compser
