@@ -14,52 +14,12 @@ set_time_limit(0);
  */
 $queue = require __DIR__ . DS . '..' . DS . 'bootstrap.php';
 
-use Symfony\Component\Process\Process;
-
 /**
- * Worker config
+ *---------------------------------------------------------------
+ * Run process manager
+ *---------------------------------------------------------------
+ *
+ * execute queue elements
  */
-$maxWorkers = 64;
-$workerSlots = [];
-
-/**
- * Exit the main loop?
- */
-$shouldExit = false;
-
-/**
- * Main loop
- */
-while(!$shouldExit)
-{
-	usleep(10000);
-
-	// check the worker status
-	foreach($workerSlots as $jobId => $process) 
-	{
-		if (!$process->isRunning()) 
-		{
-			// if the process failed we might retry
-			if (!$process->isSuccessful()) {
-				$queue->considerRetry($jobId);
-			}
-
-			echo $process->getOutput();
-			unset($workerSlots[$jobId]);
-		}
-	}
-
-	if (count($workerSlots) >= $maxWorkers) {
-		continue;
-	}
-
-	// get the next job
-	if (!$jobId = $queue->getNextJobId()) {
-		continue;
-	}
-
-	$process = new Process('php ' . __DIR__ . '/worker ' . $jobId);
-	$process->start();
-
-	$workerSlots[$jobId] = $process;
-}
+$pm = new Beryllium\ProcessManager($queue, 'php ' . __DIR__ . '/worker %s');
+$pm->work();

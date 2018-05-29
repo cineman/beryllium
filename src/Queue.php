@@ -34,6 +34,17 @@ class Queue
 	}
 
 	/**
+	 * Get a specific job from the queue by id
+	 *
+	 * @param string 				$jobId
+	 * @return Job
+	 */
+	public function get(string $jobId) : ?Job
+	{
+		return $this->driver->get($jobId);
+	}
+
+	/**
 	 * Create a new job and enqueue it.
 	 *
 	 * @param string 			$action
@@ -44,5 +55,39 @@ class Queue
 	public function add(string $action, array $parameters = [])
 	{
 		$this->driver->add(new Job(uniqid('', true), $action, $parameters));
+	}
+
+	/**
+	 * Mark the given job as done
+	 *
+	 * @param string 			$jobId
+	 * @return void
+	 */
+	public function done(string $jobId)
+	{
+		$this->driver->cleanup($jobId);
+	}
+
+	/** 
+	 * Consider a retry of the job
+	 *
+	 * @param string 			$jobId
+	 * @return bool
+	 */
+	public function considerRetry(string $jobId) : bool
+	{
+		$maxRetries = $this->driver->getMaxRetries($jobId);
+		$attempts = $this->driver->attemptCount($jobId);
+
+		// if one of the values has never been set we are unable to retry
+		if ($maxRetries === -1 || $attempts === -1) {
+			return false;
+		}
+
+		if ($maxRetries > $attempts) {
+			$this->driver->retry($jobId); return true;
+		}
+
+		return false;
 	}
 }

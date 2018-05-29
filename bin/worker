@@ -22,4 +22,5 @@ array_shift($argv);
  */
 $id = array_shift($argv);
 
-echo $id . "\n";
+// dump the job
+print_r($queue->get($id));

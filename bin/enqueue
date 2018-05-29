@@ -15,4 +15,4 @@ set_time_limit(0);
 $queue = require __DIR__ . DS . '..' . DS . 'bootstrap.php';
 
 
-$queue->add('foo');
+$queue->add('ping');
