@@ -83,7 +83,6 @@ class ProcessManager
 						$this->queue->done($jobId);
 					}
 
-					echo $process->getOutput();
 					unset($this->workers[$jobId]);
 				}
 			}
