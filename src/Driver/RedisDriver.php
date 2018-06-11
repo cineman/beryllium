@@ -48,6 +48,12 @@ class RedisDriver implements DriverInterface
 		$this->redis->set(static::PREFIX . static::ATTEMPT . $id, 0);
 		$this->redis->set(static::PREFIX . static::MAX_RETRIES . $id, $maxRetries);
 		$this->redis->set(static::PREFIX . static::DATA . $id, $job->serialize());
+
+		// timeout the queue elements after an hour 
+		// if there is an error somewhere this way we at least clear the garbage
+		$this->redis->expire(static::PREFIX . static::ATTEMPT . $id, 3600);
+		$this->redis->expire(static::PREFIX . static::MAX_RETRIES . $id, 3600);
+		$this->redis->expire(static::PREFIX . static::DATA . $id, 3600);
 	}
 
 	/**
