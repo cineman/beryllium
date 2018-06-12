@@ -90,4 +90,16 @@ class Queue
 
 		return false;
 	}
+
+	/**
+	 * Store the current number of active workers
+	 * This is used for debugging and maintanance
+	 *
+	 * @param int 			$num
+	 * @return void
+	 */
+	public function statsSetActiveWorkers(int $num)
+	{
+		$this->driver->storeStatsValue('active_workers', $num);
+	}
 }

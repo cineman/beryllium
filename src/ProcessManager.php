@@ -82,7 +82,7 @@ class ProcessManager
 					} else {
 						$this->queue->done($jobId);
 					}
-
+					
 					unset($this->workers[$jobId]);
 				}
 			}
@@ -100,6 +100,9 @@ class ProcessManager
 			$process->start();
 
 			$this->workers[$jobId] = $process;
+
+			// update the number of active jobs
+			$this->queue->statsSetActiveWorkers(count($this->workers));
 		}
 	}
 }

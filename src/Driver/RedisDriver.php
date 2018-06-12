@@ -22,6 +22,7 @@ class RedisDriver implements DriverInterface
 	const ATTEMPT = 'attempt.';
 	const MAX_RETRIES = 'max_retries.';
 	const DATA = 'data.';
+	const STATS = 'stats.';
 
 	/**
 	 * Construct
@@ -48,6 +49,12 @@ class RedisDriver implements DriverInterface
 		$this->redis->set(static::PREFIX . static::ATTEMPT . $id, 0);
 		$this->redis->set(static::PREFIX . static::MAX_RETRIES . $id, $maxRetries);
 		$this->redis->set(static::PREFIX . static::DATA . $id, $job->serialize());
+
+		// timeout the queue elements after an hour 
+		// if there is an error somewhere this way we at least clear the garbage
+		$this->redis->expire(static::PREFIX . static::ATTEMPT . $id, 3600);
+		$this->redis->expire(static::PREFIX . static::MAX_RETRIES . $id, 3600);
+		$this->redis->expire(static::PREFIX . static::DATA . $id, 3600);
 	}
 
 	/**
@@ -75,6 +82,16 @@ class RedisDriver implements DriverInterface
 	public function popWaitingId() : ?string
 	{
 		return $this->redis->rPop(static::PREFIX . static::WAITLIST) ?: null;
+	}
+
+	/**
+	 * Counts the number of jobs waiting for execution
+	 *
+	 * @return int
+	 */
+	public function waitingCount() : int
+	{
+		return $this->redis->lLen(static::PREFIX . static::WAITLIST);
 	}
 
 	/**
@@ -136,5 +153,28 @@ class RedisDriver implements DriverInterface
 	public function clearEverything()
 	{
 		$this->redis->delete($this->redis->keys(static::PREFIX . '*'));
+	}
+
+	/**
+	 * Simply store a value
+	 *
+	 * @param string 			$key
+	 * @param mixed 			$value
+	 * @return void
+	 */
+	public function storeStatsValue(string $key, $value)
+	{
+		$this->redis->set(static::PREFIX . static::STATS . $key, $value);
+	}
+
+	/**
+	 * Simply get a value
+	 *
+	 * @param string 			$key
+	 * @return void
+	 */
+	public function getStatsValue(string $key)
+	{
+		return $this->redis->get(static::PREFIX . static::STATS . $key);
 	}
 }
