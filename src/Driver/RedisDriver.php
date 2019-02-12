@@ -15,9 +15,15 @@ class RedisDriver implements DriverInterface
 	protected $redis;
 
 	/**
-	 * The storage prefix
+	 * The key prefix
+	 *
+	 * @var string
 	 */
-	const PREFIX = 'queue.';
+	protected $prefix = 'queue.';
+
+	/**
+	 * Keys
+	 */
 	const WAITLIST = 'waitlist';
 	const ATTEMPT = 'attempt.';
 	const MAX_RETRIES = 'max_retries.';
@@ -34,6 +40,16 @@ class RedisDriver implements DriverInterface
 		$this->redis = $redis;
 	}
 
+	/** 
+	 * Sets the queues key prefix
+	 *
+	 * @param string 			$key
+	 */
+	public function setKeyPrefix(string $prefix)
+	{
+		$this->prefix = $prefix;
+	}
+
 	/**
 	 * Add a job to the queue
 	 *
@@ -44,17 +60,17 @@ class RedisDriver implements DriverInterface
 	{
 		$id = $job->id(); // get the job id
 
-		$this->redis->lPush(static::PREFIX . static::WAITLIST, $id);
+		$this->redis->lPush($this->prefix . static::WAITLIST, $id);
 
-		$this->redis->set(static::PREFIX . static::ATTEMPT . $id, 0);
-		$this->redis->set(static::PREFIX . static::MAX_RETRIES . $id, $maxRetries);
-		$this->redis->set(static::PREFIX . static::DATA . $id, $job->serialize());
+		$this->redis->set($this->prefix . static::ATTEMPT . $id, 0);
+		$this->redis->set($this->prefix . static::MAX_RETRIES . $id, $maxRetries);
+		$this->redis->set($this->prefix . static::DATA . $id, $job->serialize());
 
 		// timeout the queue elements after an hour 
 		// if there is an error somewhere this way we at least clear the garbage
-		$this->redis->expire(static::PREFIX . static::ATTEMPT . $id, 3600);
-		$this->redis->expire(static::PREFIX . static::MAX_RETRIES . $id, 3600);
-		$this->redis->expire(static::PREFIX . static::DATA . $id, 3600);
+		$this->redis->expire($this->prefix . static::ATTEMPT . $id, 3600);
+		$this->redis->expire($this->prefix . static::MAX_RETRIES . $id, 3600);
+		$this->redis->expire($this->prefix . static::DATA . $id, 3600);
 	}
 
 	/**
@@ -66,7 +82,7 @@ class RedisDriver implements DriverInterface
 	public function get(string $id) : ?Job
 	{
 		// get the data
-		if (!$data = $this->redis->get(static::PREFIX . static::DATA . $id)) {
+		if (!$data = $this->redis->get($this->prefix . static::DATA . $id)) {
 			return null;
 		}
 
@@ -81,7 +97,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function popWaitingId() : ?string
 	{
-		return $this->redis->rPop(static::PREFIX . static::WAITLIST) ?: null;
+		return $this->redis->rPop($this->prefix . static::WAITLIST) ?: null;
 	}
 
 	/**
@@ -91,7 +107,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function waitingCount() : int
 	{
-		return $this->redis->lLen(static::PREFIX . static::WAITLIST);
+		return $this->redis->lLen($this->prefix . static::WAITLIST);
 	}
 
 	/**
@@ -102,8 +118,8 @@ class RedisDriver implements DriverInterface
 	 */
 	public function retry(string $id)
 	{
-		$this->redis->incr(static::PREFIX . static::ATTEMPT . $id);
-		$this->redis->lPush(static::PREFIX . static::WAITLIST, $id);
+		$this->redis->incr($this->prefix . static::ATTEMPT . $id);
+		$this->redis->lPush($this->prefix . static::WAITLIST, $id);
 	}
 
 	/**
@@ -114,7 +130,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function getMaxRetries(string $id) : int
 	{
-		if (($c = $this->redis->get(static::PREFIX . static::MAX_RETRIES . $id)) !== false) return $c;
+		if (($c = $this->redis->get($this->prefix . static::MAX_RETRIES . $id)) !== false) return $c;
 		return -1;
 	}
 
@@ -126,7 +142,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function attemptCount(string $id) : int
 	{
-		if (($c = $this->redis->get(static::PREFIX . static::ATTEMPT . $id)) !== false) return $c;
+		if (($c = $this->redis->get($this->prefix . static::ATTEMPT . $id)) !== false) return $c;
 		return -1;
 	}
 
@@ -138,9 +154,9 @@ class RedisDriver implements DriverInterface
 	public function cleanup(string $id)
 	{
 		$this->redis->delete([
-			static::PREFIX . static::ATTEMPT . $id,
-			static::PREFIX . static::MAX_RETRIES . $id,
-			static::PREFIX . static::DATA . $id,
+			$this->prefix . static::ATTEMPT . $id,
+			$this->prefix . static::MAX_RETRIES . $id,
+			$this->prefix . static::DATA . $id,
 		]);
 	}
 
@@ -152,7 +168,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function clearEverything()
 	{
-		$this->redis->delete($this->redis->keys(static::PREFIX . '*'));
+		$this->redis->delete($this->redis->keys($this->prefix . '*'));
 	}
 
 	/**
@@ -164,7 +180,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function storeStatsValue(string $key, $value)
 	{
-		$this->redis->set(static::PREFIX . static::STATS . $key, $value);
+		$this->redis->set($this->prefix . static::STATS . $key, $value);
 	}
 
 	/**
@@ -175,6 +191,6 @@ class RedisDriver implements DriverInterface
 	 */
 	public function getStatsValue(string $key)
 	{
-		return $this->redis->get(static::PREFIX . static::STATS . $key);
+		return $this->redis->get($this->prefix . static::STATS . $key);
 	}
 }
