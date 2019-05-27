@@ -65,7 +65,7 @@ class ProcessManager
 	 *
 	 * @return void
 	 */
-	public function work()
+	public function work(bool $verbose = false, bool $printWorkerOutput = false)
 	{
 		while(!$this->shouldExit)
 		{
@@ -78,10 +78,14 @@ class ProcessManager
 				{
 					// if the process failed we might retry
 					if (!$process->isSuccessful()) {
+						if ($verbose) echo "[{$jobId}] failed\n";
 						$this->queue->considerRetry($jobId);
 					} else {
+						if ($verbose) echo "[{$jobId}] success\n";
 						$this->queue->done($jobId);
 					}
+
+					if ($printWorkerOutput) echo "[{$jobId}] {$process->getOutput()}\n";
 					
 					unset($this->workers[$jobId]);
 				}
@@ -100,6 +104,8 @@ class ProcessManager
 			$process->start();
 
 			$this->workers[$jobId] = $process;
+
+			if ($verbose) echo "[{$jobId}] starting\n";
 
 			// update the number of active jobs
 			$this->queue->statsSetActiveWorkers(count($this->workers));
