@@ -111,4 +111,46 @@ class ProcessManager
 			$this->queue->statsSetActiveWorkers(count($this->workers));
 		}
 	}
+
+    /**
+     * Get the sleeptime
+     * 
+     * @return int
+     */
+    public function getIdleWait() : int
+    {
+        return $this->idleWait;
+    }
+
+    /**
+     * Set the sleep time in microseconds
+     *
+     * @param int 			$idleWait
+     * @return self
+     */
+    public function setIdleWait(int $idleWait)
+    {
+        $this->idleWait = $idleWait; return $this;
+    }
+
+    /**
+     * Get maximum allowed number of concurrent workers
+     * 
+     * @return int
+     */
+    public function getMaxWorkers() : int
+    {
+        return $this->maxWorkers;
+    }
+
+    /**
+     * Set maximum allowed number of concurrent workers
+     *
+     * @param int 			$maxWorkers
+     * @return self
+     */
+    public function setMaxWorkers(int $maxWorkers)
+    {
+        $this->maxWorkers = $maxWorkers; return $this;
+    }
 }
