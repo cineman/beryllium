@@ -153,7 +153,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function cleanup(string $id)
 	{
-		$this->redis->delete([
+		$this->redis->del([
 			$this->prefix . static::ATTEMPT . $id,
 			$this->prefix . static::MAX_RETRIES . $id,
 			$this->prefix . static::DATA . $id,
@@ -168,7 +168,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function clearEverything()
 	{
-		$this->redis->delete($this->redis->keys($this->prefix . '*'));
+		$this->redis->del($this->redis->keys($this->prefix . '*'));
 	}
 
 	/**
