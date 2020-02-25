@@ -104,4 +104,14 @@ class Queue
 	{
 		$this->driver->storeStatsValue('active_workers', $num);
 	}
+
+	/**
+	 * Returns the number of jobs currently in queue
+	 *
+	 * @return int
+	 */
+	public function waitingCount() : int
+	{
+		return $this->driver->waitingCount();
+	}
 }
