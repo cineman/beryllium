@@ -50,11 +50,13 @@ class Queue
 	 * @param string 			$action
 	 * @param array 			$parameters
 	 *
-	 * @return string Returns the job id 
+	 * @return Job Returns the job 
 	 */
-	public function add(string $action, array $parameters = [])
+	public function add(string $action, array $parameters = []) : Job
 	{
-		$this->driver->add(new Job(uniqid('', true), $action, $parameters));
+		$job = new Job(uniqid('', true), $action, $parameters);
+		$this->driver->add($job);
+		return $job;
 	}
 
 	/**
