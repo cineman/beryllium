@@ -15,7 +15,7 @@ class RedisDriver implements DriverInterface
 	protected $redis;
 
 	/**
-	 * The key prefix
+	 * The redis key prefix
 	 *
 	 * @var string
 	 */
@@ -192,5 +192,41 @@ class RedisDriver implements DriverInterface
 	public function getStatsValue(string $key)
 	{
 		return $this->redis->get($this->prefix . static::STATS . $key);
+	}
+
+	/**
+	 * Creates a lock entry on the driver, this must be synchronised!
+	 *
+	 * @param string 				$key
+	 * @param string 				$token
+	 * @param int 					$ttl
+	 *
+	 * @return bool Returns true if the lock could be created
+	 */
+	public function lock(string $key, string $token, int $ttl) : bool
+	{
+		return $this->redis->set($key, $token, ['NX', 'EX' => $ttl]);
+	}
+
+	/**
+	 * Removes a lock entry on the driver, this must be synchronised!
+	 * Also the lock for the key should only be removed if the token matches!
+	 *
+	 * @param string 				$key
+	 * @param string 				$token
+	 *
+	 * @return bool
+	 */
+	public function unlock(string $key, string $token) : bool
+	{
+		$script = '
+            if redis.call("GET", KEYS[1]) == ARGV[1] then
+                return redis.call("DEL", KEYS[1])
+            else
+                return 0
+            end
+        ';
+
+        return (bool) $this->redis->eval($script, [$key, $token], 1);
 	}
 }
