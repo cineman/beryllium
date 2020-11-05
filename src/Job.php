@@ -2,6 +2,8 @@
 
 namespace Beryllium;
 
+use Beryllium\Exception\InvalidJobException;
+
 class Job
 {
 	/**
@@ -28,28 +30,30 @@ class Job
 	/**
 	 * The jobs id
 	 *
-	 * @param string
+	 * @var string
 	 */
-	private $id;
+	private string $id;
 
 	/**
 	 * The jobs action
 	 *
-	 * @param string
+	 * @var string
 	 */
-	private $action;
+	private string $action;
 
 	/**
 	 * The jobs parameters
 	 *
-	 * @param string
+	 * @var array<mixed>
 	 */
-	private $parameters;
+	private array $parameters;
 
 	/**
 	 * Construct
 	 *
-	 * @param DriverInterface 			$driver
+	 * @param string 			$id
+	 * @param string 			$action
+	 * @param array<mixed> 		$parameters
 	 */
 	public function __construct(string $id, string $action, array $parameters = [])
 	{
@@ -60,6 +64,8 @@ class Job
 
 	/**
 	 * Get the jobs id
+	 *
+	 * @return string 
 	 */
 	public function id() : string
 	{
@@ -68,6 +74,8 @@ class Job
 
 	/**
 	 * Get the jobs action
+	 *
+	 * @return string
 	 */
 	public function action() : string
 	{
@@ -76,6 +84,8 @@ class Job
 
 	/**
 	 * Get the jobs parameters
+	 *
+	 * @return array<mixed>
 	 */
 	public function parameters() : array
 	{
@@ -84,8 +94,12 @@ class Job
 
 	/**
 	 * Get a specific parameter from the job
+	 *
+	 * @param string 				$key
+	 * @param mixed 				$default 
+	 * @return mixed
 	 */
-	public function parameter($key, $default = null)
+	public function parameter(string $key, $default = null)
 	{
 		return $this->parameters[$key] ?? $default;
 	}
@@ -93,10 +107,16 @@ class Job
 	/** 
 	 * Serialize the Job
 	 *
+	 * @throws InvalidJobException
+	 *
 	 * @return string
 	 */
 	public function serialize() : string
 	{
-		return json_encode(['id' => $this->id, 'action' => $this->action, 'data' => $this->parameters]);
+		if (($serialized = json_encode(['id' => $this->id, 'action' => $this->action, 'data' => $this->parameters])) === false) {
+			throw new InvalidJobException("Could not serialize Beryllium Job with ID '{$this->id}'. " . json_last_error_msg());
+		}
+
+		return $serialized;
 	}
 }
