@@ -54,10 +54,10 @@ class Mutex
      *
      * @throws LockedMutexException
      * 
-     * @param int               $tll Max time to live in seconds.
+     * @param int               $ttl Max time to live in seconds.
      * @return void
      */
-    public function lock(int $ttl = 10)
+    public function lock(int $ttl = 30)
     {
         // generate a token
         $this->token = uniqid();
@@ -66,6 +66,16 @@ class Mutex
         if (!$this->driver->lock($this->lockkey, $this->token, $ttl)) {
             throw new LockedMutexException("The mutex ($this->lockkey) is already locked.", static::ERROR_ALREADY_LOCKED);
         }
+    }
+
+    /**
+     * Is the mutex already locked?
+     *
+     * @return bool
+     */
+    public function isLocked() : bool
+    {
+        return $this->driver->isLocked($this->lockkey);
     }
 
     /**
