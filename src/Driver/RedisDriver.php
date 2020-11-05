@@ -19,7 +19,14 @@ class RedisDriver implements DriverInterface
 	 *
 	 * @var string
 	 */
-	protected $prefix = 'queue.';
+	protected $queuePrefix = 'queue.';
+
+	/**
+	 * The redis lock key prefix
+	 *
+	 * @var string
+	 */
+	protected $lockPrefix = 'lock.';
 
 	/**
 	 * Keys
@@ -43,11 +50,31 @@ class RedisDriver implements DriverInterface
 	/** 
 	 * Sets the queues key prefix
 	 *
-	 * @param string 			$key
+	 * @param string 			$prefix
+	 */
+	public function setQueueKeyPrefix(string $prefix)
+	{
+		$this->queuePrefix = $prefix;
+	}
+
+	/** 
+	 * @deprecated
+	 * @param string 			$prefix
 	 */
 	public function setKeyPrefix(string $prefix)
 	{
-		$this->prefix = $prefix;
+		trigger_error('Method ' . __METHOD__ . ' is deprecated, use setQueueKeyPrefix instead.', E_USER_DEPRECATED);
+		$this->setQueueKeyPrefix($prefix);
+	}
+
+	/** 
+	 * Sets the lock key prefix
+	 *
+	 * @param string 			$prefix
+	 */
+	public function setLockKeyPrefix(string $prefix)
+	{
+		$this->lockPrefix = $prefix;
 	}
 
 	/**
@@ -60,17 +87,17 @@ class RedisDriver implements DriverInterface
 	{
 		$id = $job->id(); // get the job id
 
-		$this->redis->lPush($this->prefix . static::WAITLIST, $id);
+		$this->redis->lPush($this->queuePrefix . static::WAITLIST, $id);
 
-		$this->redis->set($this->prefix . static::ATTEMPT . $id, 0);
-		$this->redis->set($this->prefix . static::MAX_RETRIES . $id, $maxRetries);
-		$this->redis->set($this->prefix . static::DATA . $id, $job->serialize());
+		$this->redis->set($this->queuePrefix . static::ATTEMPT . $id, 0);
+		$this->redis->set($this->queuePrefix . static::MAX_RETRIES . $id, $maxRetries);
+		$this->redis->set($this->queuePrefix . static::DATA . $id, $job->serialize());
 
 		// timeout the queue elements after an hour 
 		// if there is an error somewhere this way we at least clear the garbage
-		$this->redis->expire($this->prefix . static::ATTEMPT . $id, 3600);
-		$this->redis->expire($this->prefix . static::MAX_RETRIES . $id, 3600);
-		$this->redis->expire($this->prefix . static::DATA . $id, 3600);
+		$this->redis->expire($this->queuePrefix . static::ATTEMPT . $id, 3600);
+		$this->redis->expire($this->queuePrefix . static::MAX_RETRIES . $id, 3600);
+		$this->redis->expire($this->queuePrefix . static::DATA . $id, 3600);
 	}
 
 	/**
@@ -82,7 +109,7 @@ class RedisDriver implements DriverInterface
 	public function get(string $id) : ?Job
 	{
 		// get the data
-		if (!$data = $this->redis->get($this->prefix . static::DATA . $id)) {
+		if (!$data = $this->redis->get($this->queuePrefix . static::DATA . $id)) {
 			return null;
 		}
 
@@ -97,7 +124,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function popWaitingId() : ?string
 	{
-		return $this->redis->rPop($this->prefix . static::WAITLIST) ?: null;
+		return $this->redis->rPop($this->queuePrefix . static::WAITLIST) ?: null;
 	}
 
 	/**
@@ -107,7 +134,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function waitingCount() : int
 	{
-		return $this->redis->lLen($this->prefix . static::WAITLIST);
+		return $this->redis->lLen($this->queuePrefix . static::WAITLIST);
 	}
 
 	/**
@@ -118,8 +145,8 @@ class RedisDriver implements DriverInterface
 	 */
 	public function retry(string $id)
 	{
-		$this->redis->incr($this->prefix . static::ATTEMPT . $id);
-		$this->redis->lPush($this->prefix . static::WAITLIST, $id);
+		$this->redis->incr($this->queuePrefix . static::ATTEMPT . $id);
+		$this->redis->lPush($this->queuePrefix . static::WAITLIST, $id);
 	}
 
 	/**
@@ -130,7 +157,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function getMaxRetries(string $id) : int
 	{
-		if (($c = $this->redis->get($this->prefix . static::MAX_RETRIES . $id)) !== false) return $c;
+		if (($c = $this->redis->get($this->queuePrefix . static::MAX_RETRIES . $id)) !== false) return $c;
 		return -1;
 	}
 
@@ -142,7 +169,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function attemptCount(string $id) : int
 	{
-		if (($c = $this->redis->get($this->prefix . static::ATTEMPT . $id)) !== false) return $c;
+		if (($c = $this->redis->get($this->queuePrefix . static::ATTEMPT . $id)) !== false) return $c;
 		return -1;
 	}
 
@@ -154,9 +181,9 @@ class RedisDriver implements DriverInterface
 	public function cleanup(string $id)
 	{
 		$this->redis->del([
-			$this->prefix . static::ATTEMPT . $id,
-			$this->prefix . static::MAX_RETRIES . $id,
-			$this->prefix . static::DATA . $id,
+			$this->queuePrefix . static::ATTEMPT . $id,
+			$this->queuePrefix . static::MAX_RETRIES . $id,
+			$this->queuePrefix . static::DATA . $id,
 		]);
 	}
 
@@ -168,7 +195,8 @@ class RedisDriver implements DriverInterface
 	 */
 	public function clearEverything()
 	{
-		$this->redis->del($this->redis->keys($this->prefix . '*'));
+		$this->redis->del($this->redis->keys($this->queuePrefix . '*'));
+		$this->redis->del($this->redis->keys($this->lockPrefix . '*'));
 	}
 
 	/**
@@ -180,7 +208,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function storeStatsValue(string $key, $value)
 	{
-		$this->redis->set($this->prefix . static::STATS . $key, $value);
+		$this->redis->set($this->queuePrefix . static::STATS . $key, serialize($value));
 	}
 
 	/**
@@ -191,7 +219,29 @@ class RedisDriver implements DriverInterface
 	 */
 	public function getStatsValue(string $key)
 	{
-		return $this->redis->get($this->prefix . static::STATS . $key);
+		return unserialize($this->redis->get($this->queuePrefix . static::STATS . $key));
+	}
+
+	/**
+	 * Checks if the given key is locked on the driver.
+	 *
+	 * @param string 					$key
+	 * @return bool
+	 */
+	public function isLocked(string $key) : bool
+	{
+		return $this->redis->exists($this->lockPrefix . $key);
+	}
+
+	/**
+	 * Returns the locks token
+	 *
+	 * @param string 					$key
+	 * @return string
+	 */
+	public function getLockToken(string $key) : ?string
+	{
+		return $this->redis->get($this->lockPrefix . $key) ?: null;
 	}
 
 	/**
@@ -205,8 +255,9 @@ class RedisDriver implements DriverInterface
 	 */
 	public function lock(string $key, string $token, int $ttl) : bool
 	{
-		return $this->redis->set($key, $token, ['NX', 'EX' => $ttl]);
+		return $this->redis->set($this->lockPrefix . $key, $token, ['NX', 'EX' => $ttl]);
 	}
+
 
 	/**
 	 * Removes a lock entry on the driver, this must be synchronised!
@@ -227,6 +278,6 @@ class RedisDriver implements DriverInterface
             end
         ';
 
-        return (bool) $this->redis->eval($script, [$key, $token], 1);
+        return (bool) $this->redis->eval($script, [$this->lockPrefix . $key, $token], 1);
 	}
 }

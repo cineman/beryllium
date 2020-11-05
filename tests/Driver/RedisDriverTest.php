@@ -17,6 +17,8 @@ class RedisDriverTest extends \PHPUnit\Framework\TestCase
 		$redis->pconnect('localhost');
 
 		$driver = new RedisDriver($redis);
+		$driver->setQueueKeyPrefix('test.beryllium.queue.');
+		$driver->setLockKeyPrefix('test.beryllium.lock.');
 
 		return [[$driver]];
 	}
@@ -32,7 +34,7 @@ class RedisDriverTest extends \PHPUnit\Framework\TestCase
 	/**
      * @dataProvider redisDriverProvider
      */
-	public function testAdd(RedisDriver $driver)
+	public function testAddAndGet(RedisDriver $driver)
 	{
 		$job = new Job('test', 'say', ['text' => 'hello']);
 
@@ -85,6 +87,25 @@ class RedisDriverTest extends \PHPUnit\Framework\TestCase
 	/**
      * @dataProvider redisDriverProvider
      */
+	public function testWaitingCount(RedisDriver $driver)
+	{
+		$driver->clearEverything(); // make sure to clear the data
+
+		$this->assertEquals(0, $driver->waitingCount());
+		$driver->add(new Job('test1', 'say', ['text' => 'hello']));
+		$this->assertEquals(1, $driver->waitingCount());
+		$driver->add(new Job('test2', 'say', ['text' => 'world']));
+		$this->assertEquals(2, $driver->waitingCount());
+
+		$driver->cleanup($driver->popWaitingId());
+		$this->assertEquals(1, $driver->waitingCount());
+		$driver->cleanup($driver->popWaitingId());
+		$this->assertEquals(0, $driver->waitingCount());
+	}
+
+	/**
+     * @dataProvider redisDriverProvider
+     */
 	public function testRetry(RedisDriver $driver)
 	{
 		$driver->clearEverything(); // make sure to clear the data
@@ -110,11 +131,86 @@ class RedisDriverTest extends \PHPUnit\Framework\TestCase
 	/**
      * @dataProvider redisDriverProvider
      */
-	public function testAttemptCountAndMaxEmpty(RedisDriver $driver)
+	public function testGetMaxRetries(RedisDriver $driver)
+	{
+		$driver->clearEverything(); // make sure to clear the data
+		
+		$job = new Job('test1', 'say', ['text' => 'hello']);
+
+		$this->assertEquals(-1, $driver->getMaxRetries($job->id()));
+		$driver->add($job);
+		$this->assertEquals(3, $driver->getMaxRetries($job->id()));
+
+		$driver->cleanup($job->id());
+
+		// custom number of retries		
+		$this->assertEquals(-1, $driver->getMaxRetries($job->id()));
+		$driver->add($job, 5);
+		$this->assertEquals(5, $driver->getMaxRetries($job->id()));
+	}
+
+	/**
+     * @dataProvider redisDriverProvider
+     */
+	public function testAttemptCount(RedisDriver $driver)
 	{
 		$driver->clearEverything(); // make sure to clear the data
 		
 		$this->assertEquals(-1, $driver->attemptCount('unknown'));
 		$this->assertEquals(-1, $driver->getMaxRetries('unknown'));
+
+		$job = new Job('test1', 'say', ['text' => 'hello']);
+		$driver->add($job);
+		$this->assertEquals(0, $driver->attemptCount($job->id()));
+		$driver->popWaitingId();
+		$driver->retry($job->id());
+		$this->assertEquals(1, $driver->attemptCount($job->id()));
 	}
+
+	/**
+     * @dataProvider redisDriverProvider
+     */
+	public function testStatsStorage(RedisDriver $driver)
+	{
+		$driver->clearEverything(); // make sure to clear the data
+		
+		foreach([
+			42,
+			true,
+			'string',
+			[1, 2, 3],
+			['a' => 'b', 'c' => 'd'],
+		] as $value)
+		{
+			$driver->storeStatsValue('stat', $value);
+			$this->assertEquals($value, $driver->getStatsValue('stat'));
+		}
+	}
+
+	/**
+     * @dataProvider redisDriverProvider
+     */
+	public function testLocking(RedisDriver $driver)
+	{
+		$driver->clearEverything(); // make sure to clear the data
+
+		// should not be locked yet
+		$this->assertFalse($driver->isLocked('test'));
+		$this->assertNull($driver->getLockToken('test'));
+
+		$this->assertTrue($driver->lock('test', 'a', 60));
+		$this->assertFalse($driver->lock('test', 'b', 60));
+
+		$this->assertTrue($driver->isLocked('test'));
+		$this->assertEquals('a', $driver->getLockToken('test'));
+
+		$this->assertFalse($driver->unlock('test', 'b'));
+		$this->assertTrue($driver->unlock('test', 'a'));
+
+		$this->assertFalse($driver->isLocked('test'));
+		$this->assertTrue($driver->lock('test', 'b', 60));
+		$this->assertTrue($driver->isLocked('test'));
+		$this->assertEquals('b', $driver->getLockToken('test'));
+		$this->assertTrue($driver->unlock('test', 'b'));
+	}	
 }

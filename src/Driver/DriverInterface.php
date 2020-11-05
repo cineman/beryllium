@@ -95,6 +95,22 @@ interface DriverInterface
     public function getStatsValue(string $key);
 
     /**
+     * Checks if the given key is locked on the driver.
+     *
+     * @param string                    $key
+     * @return bool
+     */
+    public function isLocked(string $key) : bool;
+
+    /**
+     * Returns the locks token
+     *
+     * @param string                    $key
+     * @return string
+     */
+    public function getLockToken(string $key) : ?string;
+
+    /**
      * Creates a lock entry on the driver, this must be synchronised!
      *
      * @param string                $key
