@@ -79,6 +79,20 @@ class Mutex
     }
 
     /**
+     * Is the mutex locked by the current mutex?
+     *
+     * @return bool
+     */
+    public function ownsLock() : bool
+    {
+        // if the mutex is not locked we assume false
+        if (!$this->isLocked()) return false;
+
+        // read the lock token and compare
+        return $this->driver->getLockToken($this->lockkey) === $this->token;
+    }
+
+    /**
      * Lock the mutex
      *
      * @throws LockedMutexException
