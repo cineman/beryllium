@@ -7,6 +7,7 @@ use Symfony\Component\Process\Process;
 // load the test env
 list(
     $queue,
+    $locker,
     $redis
 ) = require __DIR__ . DS . '..' . DS . 'test-bootstrap.php';
 
@@ -74,6 +75,34 @@ class IntegrationTest extends \PHPUnit\Framework\TestCase
 
         // check the increment result
         $this->assertEquals(10, $redis->get('beryllium.test.integration.incr'));
+
+        $pm->stop();
+    }
+
+    /**
+     * This test runs a task reading a value from a file, increasing it and writing it back to the file
+     * the operation is wrapped in a mutex safe exec, so the result should be the same as the number of jobs.
+     */
+    public function testParallelMutexLocking()
+    {
+        $queue = $this->getTestQueueInstance();
+
+        // start a process manager
+        $pm = new Process(['php', realpath(__DIR__ . '/../bin/test-pm')]);
+        $pm->start();
+
+        $incrfile = '/tmp/beryllium.test.incr';
+        file_put_contents($incrfile, '0');
+
+        for($i=0; $i<10; $i++) {
+            $queue->add('file.incr_test', ['file' => $incrfile], 1000);
+        }
+
+        // wait for second
+        sleep(1);
+
+        // check the increment result
+        $this->assertEquals(10, file_get_contents($incrfile));
 
         $pm->stop();
     }
