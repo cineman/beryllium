@@ -1,4 +1,6 @@
-# beryllium
+# Beryllium
+
+![Hydrogen PHPUnit](https://github.com/cineman/beryllium/workflows/Hydrogen%20PHPUnit/badge.svg)
 
 A redis based queuing system for PHP.
 
@@ -75,7 +77,7 @@ Queue test took about 1.968s
 
 Serial took 4.08s longer than the queue.
 Queue was about 148.24% faster.
-```x
+```
 
 ## Linux Service
 
