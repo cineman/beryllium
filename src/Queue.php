@@ -49,13 +49,14 @@ class Queue
 	 *
 	 * @param string 			$action
 	 * @param array<mixed> 		$parameters
+	 * @param int 				$maxRetries
 	 *
 	 * @return Job Returns the job 
 	 */
-	public function add(string $action, array $parameters = []) : Job
+	public function add(string $action, array $parameters = [], int $maxRetries = 3) : Job
 	{
 		$job = new Job(uniqid('', true), $action, $parameters);
-		$this->driver->add($job);
+		$this->driver->add($job, $maxRetries);
 		return $job;
 	}
 

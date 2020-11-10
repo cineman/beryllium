@@ -44,4 +44,9 @@ switch ($job->action())
     case 'redis.incr':
         $redis->incr($job->parameter('key'));
     break;
+
+    case 'redis.incr.rfail':
+        if (mt_rand(0, 1) === 1) throw new \Exception("Excpected unexpected exception!");
+        $redis->incr($job->parameter('key'));
+    break;
 }
