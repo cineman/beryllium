@@ -40,4 +40,8 @@ switch ($job->action())
         $redis->hset($job->parameter('hashset'), $job->parameter('key'), $work_it);
         $redis->incr('beryllium.test.pow.counter'); // increment the counter so the test knows when we are done
     break;
+
+    case 'redis.incr':
+        $redis->incr($job->parameter('key'));
+    break;
 }
