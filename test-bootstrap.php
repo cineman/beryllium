@@ -18,7 +18,7 @@ use Beryllium\Driver\RedisDriver;
  */
 if (!defined('BERYLLIUM_REDIS_HOST')) define('BERYLLIUM_REDIS_HOST', '127.0.0.1');
 if (!defined('BERYLLIUM_REDIS_PORT')) define('BERYLLIUM_REDIS_PORT', 6379);
-if (!defined('BERYLLIUM_IDLE_WAIT')) define('BERYLLIUM_IDLE_WAIT', 1000); // 1ms
+if (!defined('BERYLLIUM_IDLE_WAIT')) define('BERYLLIUM_IDLE_WAIT', 10000); // 10ms
 if (!defined('BERYLLIUM_MAX_WORKERS')) define('BERYLLIUM_MAX_WORKERS', 8);
 
 /**
