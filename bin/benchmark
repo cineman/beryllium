@@ -1,0 +1,80 @@
+#!/usr/bin/env php
+<?php
+if (!defined('DS')) { define('DS', DIRECTORY_SEPARATOR); }
+
+// make sure we never run out of time.
+set_time_limit(0);
+
+/**
+ *---------------------------------------------------------------
+ * Bootstrap
+ *---------------------------------------------------------------
+ *
+ * We need what we need
+ */
+list(
+    $queue,
+    $redis
+) = require __DIR__ . DS . '..' . DS . 'test-bootstrap.php';
+
+/**
+ * Benchamrk config
+ *
+ * ----------------
+ */
+$difficulty = 5;
+$numberOfTasks = 25;
+
+echo "Running Benchmark." . PHP_EOL;
+echo "Difficulty: " . $difficulty . PHP_EOL . PHP_EOL;
+
+/**
+ * First measure the proof of work function synchronously 
+ */
+$starttime = microtime(true);
+
+$pown = [];
+for($i=0; $i<$numberOfTasks; $i++)
+{
+    $k = 'test.' . $i;
+    $pown[$k] = proof_of_work($k, $difficulty);
+}
+
+foreach($pown as $k => $v) echo "{$k}: {$v}" . PHP_EOL;
+
+$timediffSerial = microtime(true) - $starttime;
+echo sprintf("\nSerial test took about %s\n\n", round($timediffSerial, 3) . 's');
+
+/**
+ * Now deliver the same proof of work with the queue
+ */
+echo "Now using the queue..." . PHP_EOL;
+$starttime = microtime(true);
+
+$resultHashSetKey = 'beryllium.test.pow';
+$resultCounterKey = 'beryllium.test.pow.counter';
+$redis->del($resultHashSetKey);
+$redis->del($resultCounterKey);
+
+for($i=0; $i<$numberOfTasks; $i++)
+{
+    $queue->add('proof_of_work', ['key' => 'test.' . $i, 'hashset' => $resultHashSetKey, 'difficulty' => $difficulty]);
+}
+
+// wait for finish
+echo "waiting for queue result..." . PHP_EOL;
+while($redis->get($resultCounterKey) < $numberOfTasks) {
+    usleep(100 * 1000);
+}
+
+// read the results
+$pown = $redis->hgetall($resultHashSetKey);
+ksort($pown);
+foreach($pown as $k => $v) echo "{$k}: {$v}" . PHP_EOL;
+
+$timediffQueue = microtime(true) - $starttime;
+echo sprintf("\nQueue test took about %s\n\n", round($timediffQueue, 3) . 's');
+
+// The queue must be faster or are your running this on a single core mashine?
+echo 'Serial took ' . round($timediffSerial - $timediffQueue, 2) . 's longer than the queue.' . PHP_EOL;
+echo 'Queue was about ' . round(($timediffSerial / ($timediffSerial - $timediffQueue)) * 100, 2) . '% faster.' . PHP_EOL;
