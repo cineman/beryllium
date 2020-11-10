@@ -2,4 +2,4 @@ parameters:
     ignoreErrors:
         - '/Method Beryllium\\Driver\\PHPArrayDriver\:\:.*/'
     bootstrapFiles:
-        - bootstrap.php
+        - test-bootstrap.php
