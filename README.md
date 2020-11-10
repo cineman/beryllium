@@ -2,15 +2,15 @@
 
 ![Hydrogen PHPUnit](https://github.com/cineman/beryllium/workflows/Hydrogen%20PHPUnit/badge.svg)
 
-A redis based queuing system for PHP.
+A Redis based queuing system for PHP.
 
 ## Performance
 
-This system is not build specifically for performance, adding jobs to the queue introduces alot of overhead. The system is meant for background processing and big expansive tasks that can run in parallel. 
+This system is not built specifically for performance, adding jobs to the queue introduces a lot of overhead. The system is meant for background processing and big expansive tasks that can run in parallel. 
 
-Below is the output of the benchmarking script under `bin/benchmark` which compares serial vs parrallel performance gain for an expansive task. 
+Below is the output of the benchmarking script under `bin/benchmark` which compares serial vs parallel performance gain for an expansive task. 
 
-The results are from my 2015 macbook with an I7 quad core CPU.
+The results are from my 2015 MacBook with an I7 quad-core CPU.
 
 ```
 $ ./bin/benchmark
@@ -46,7 +46,7 @@ test.24: 1263135
 Serial test took about 6.048s
 
 Now using the queue...
-waiting for queue result...
+waiting for the queue result...
 test.0: 731462
 test.1: 1388492
 test.10: 830209
