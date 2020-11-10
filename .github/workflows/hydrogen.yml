@@ -1,0 +1,35 @@
+name: Hydrogen PHPUnit
+
+on:
+  push:
+    branches: [ master, stage ]
+  pull_request:
+    branches: [ master, stage ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-suggest
+    
+    - name: Install PHPUnit 
+      run: composer require phpunit/phpunit --dev
+      
+    - name: Run PHPUnit 
+      run: php vendor/bin/phpunit 
+      
+    - name: Run PHPStan 
+      run: php vendor/bin/phpstan analyse src --error-format=github -l7
