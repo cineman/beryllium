@@ -16,7 +16,7 @@ class ProcessManager
 	/**
 	 * An array of workers
 	 *
-	 * @var array
+	 * @var array<Process>
 	 */
 	protected $workers = [];
 
@@ -52,8 +52,9 @@ class ProcessManager
 	 * Construct
 	 *
 	 * @param Queue 			$queue
+     * @param string            $processPattern           
 	 */
-	public function __construct(Queue $queue, $processPattern)
+	public function __construct(Queue $queue, string $processPattern)
 	{
 		$this->queue = $queue;
 		$this->processPattern = $processPattern;
@@ -100,7 +101,7 @@ class ProcessManager
 				continue;
 			}
 
-			$process = new Process(sprintf($this->processPattern, $jobId));
+			$process = new Process(explode(' ', sprintf($this->processPattern, $jobId)));
 			$process->start();
 
 			$this->workers[$jobId] = $process;
