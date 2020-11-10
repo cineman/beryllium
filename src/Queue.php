@@ -48,7 +48,7 @@ class Queue
 	 * Create a new job and enqueue it.
 	 *
 	 * @param string 			$action
-	 * @param array 			$parameters
+	 * @param array<mixed> 		$parameters
 	 *
 	 * @return Job Returns the job 
 	 */
