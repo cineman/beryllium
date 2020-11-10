@@ -6,7 +6,7 @@
             "email": "mario@clancats.com"
         }
     ],
-    "bin": ["bin/pm", "bin/worker"],
+    "bin": [],
     "require": {
         "symfony/process": "^4.0"
     },
