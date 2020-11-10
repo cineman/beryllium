@@ -12,7 +12,10 @@ set_time_limit(0);
  *
  * We need what we need
  */
-$queue = require __DIR__ . DS . '..' . DS . 'bootstrap.php';
+list(
+    $queue,
+    $redis
+) = require __DIR__ . DS . '..' . DS . 'test-bootstrap.php';
 
 /**
  *---------------------------------------------------------------
@@ -21,5 +24,7 @@ $queue = require __DIR__ . DS . '..' . DS . 'bootstrap.php';
  *
  * execute queue elements
  */
-$pm = new Beryllium\ProcessManager($queue, 'php ' . __DIR__ . '/worker %s');
+$pm = new Beryllium\ProcessManager($queue, 'php ' . __DIR__ . '/test-worker %s');
+$pm->setIdleWait(BERYLLIUM_IDLE_WAIT); // 10ms
+$pm->setMaxWorkers(BERYLLIUM_MAX_WORKERS);
 $pm->work();

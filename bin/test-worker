@@ -1,0 +1,43 @@
+#!/usr/bin/env php
+<?php
+if (!defined('DS')) { define('DS', DIRECTORY_SEPARATOR); }
+
+// make sure we never run out of time.
+set_time_limit(0);
+
+/**
+ *---------------------------------------------------------------
+ * Bootstrap
+ *---------------------------------------------------------------
+ *
+ * We need what we need
+ */
+list(
+    $queue,
+    $redis
+) = require __DIR__ . DS . '..' . DS . 'test-bootstrap.php';
+
+// throw away the command..
+array_shift($argv);
+
+/**
+ * Get the ID of the work that needs to be done, and get it done.
+ */
+$id = array_shift($argv);
+
+/**
+ * Read the job from the queue
+ */
+$job = $queue->get($id);
+
+/**
+ * Handle the job
+ */
+switch ($job->action()) 
+{
+    case 'proof_of_work':
+        $work_it = proof_of_work($job->parameter('key'), $job->parameter('difficulty'));
+        $redis->hset($job->parameter('hashset'), $job->parameter('key'), $work_it);
+        $redis->incr('beryllium.test.pow.counter'); // increment the counter so the test knows when we are done
+    break;
+}
