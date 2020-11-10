@@ -5,6 +5,8 @@ namespace Beryllium\Driver;
 use Redis;
 use Beryllium\Job;
 
+use Beryllium\Exception\InvalidDataException;
+
 class RedisDriver implements DriverInterface
 {	
 	/** 
@@ -51,6 +53,7 @@ class RedisDriver implements DriverInterface
 	 * Sets the queues key prefix
 	 *
 	 * @param string 			$prefix
+	 * @return void
 	 */
 	public function setQueueKeyPrefix(string $prefix)
 	{
@@ -60,6 +63,7 @@ class RedisDriver implements DriverInterface
 	/** 
 	 * @deprecated
 	 * @param string 			$prefix
+	 * @return void
 	 */
 	public function setKeyPrefix(string $prefix)
 	{
@@ -71,6 +75,7 @@ class RedisDriver implements DriverInterface
 	 * Sets the lock key prefix
 	 *
 	 * @param string 			$prefix
+	 * @return void
 	 */
 	public function setLockKeyPrefix(string $prefix)
 	{
@@ -134,7 +139,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function waitingCount() : int
 	{
-		return $this->redis->lLen($this->queuePrefix . static::WAITLIST);
+		return (int) $this->redis->lLen($this->queuePrefix . static::WAITLIST);
 	}
 
 	/**
@@ -157,7 +162,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function getMaxRetries(string $id) : int
 	{
-		if (($c = $this->redis->get($this->queuePrefix . static::MAX_RETRIES . $id)) !== false) return $c;
+		if (($c = $this->redis->get($this->queuePrefix . static::MAX_RETRIES . $id)) !== false) return (int) $c;
 		return -1;
 	}
 
@@ -169,7 +174,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function attemptCount(string $id) : int
 	{
-		if (($c = $this->redis->get($this->queuePrefix . static::ATTEMPT . $id)) !== false) return $c;
+		if (($c = $this->redis->get($this->queuePrefix . static::ATTEMPT . $id)) !== false) return (int) $c;
 		return -1;
 	}
 
@@ -215,11 +220,15 @@ class RedisDriver implements DriverInterface
 	 * Simply get a value
 	 *
 	 * @param string 			$key
-	 * @return void
+	 * @return mixed
 	 */
 	public function getStatsValue(string $key)
 	{
-		return unserialize($this->redis->get($this->queuePrefix . static::STATS . $key));
+		if (($raw = $this->redis->get($this->queuePrefix . static::STATS . $key)) === false) {
+			throw new InvalidDataException("Could not read stats value from redis.");
+		}
+
+		return unserialize($raw);
 	}
 
 	/**
@@ -230,7 +239,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function isLocked(string $key) : bool
 	{
-		return $this->redis->exists($this->lockPrefix . $key);
+		return (bool) $this->redis->exists($this->lockPrefix . $key);
 	}
 
 	/**
