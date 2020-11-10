@@ -104,4 +104,58 @@ class MutexTest extends \PHPUnit\Framework\TestCase
         $this->assertFalse($mutex1->ownsLock());
         $this->assertTrue($mutex2->ownsLock());
     }
+
+    public function testSafeExec()
+    {
+        static::ensureDriver();
+
+        $val = 0;
+
+        $mutex1 = $this->createMutex('test');
+        $mutex2 = $this->createMutex('test');
+
+        $mutex1->safeExec(function() use(&$val) 
+        {
+            $val = 1;
+        });
+
+        $this->assertEquals(1, $val);
+
+        $mutex1->safeExec(function() use(&$val) 
+        {
+            $val = 2;
+        });
+
+        $this->assertEquals(2, $val);
+
+        try 
+        {
+            $mutex1->safeExec(function() use(&$val, $mutex2) 
+            {
+                $mutex2->safeExec(function() use(&$val) 
+                {
+                    $val = 3;
+                });
+            });
+        }
+        catch(LockedMutexException $e) {}
+
+        $this->assertEquals(2, $val);
+    }
+
+    public function testSafeExecAlreadyLocked()
+    {
+        $mutex1 = $this->createMutex('test');
+        $mutex2 = $this->createMutex('test');
+
+        $this->expectException(LockedMutexException::class);
+
+        $mutex1->safeExec(function() use($mutex2) 
+        {
+            $mutex2->safeExec(function()
+            {
+                
+            });
+        });
+    }
 }
