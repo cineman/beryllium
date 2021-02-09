@@ -21,23 +21,23 @@ class RedisDriver implements DriverInterface
 	 *
 	 * @var string
 	 */
-	protected $queuePrefix = 'queue.';
+	protected $queuePrefix = 'beryllium.queue.';
 
 	/**
 	 * The redis lock key prefix
 	 *
 	 * @var string
 	 */
-	protected $lockPrefix = 'lock.';
+	protected $lockPrefix = 'beryllium.lock.';
 
 	/**
-	 * Keys
+	 * Redis Keys
 	 */
-	const WAITLIST = 'waitlist';
-	const ATTEMPT = 'attempt.';
-	const MAX_RETRIES = 'max_retries.';
-	const DATA = 'data.';
-	const STATS = 'stats.';
+	const REDIS_KEY_WAITLIST = 'waitlist';
+	const REDIS_KEY_ATTEMPT = 'attempt.';
+	const REDIS_KEY_MAX_RETRIES = 'max_retries.';
+	const REDIS_KEY_DATA = 'data.';
+	const REDIS_KEY_STATS = 'stats.';
 
 	/**
 	 * Construct
@@ -48,6 +48,12 @@ class RedisDriver implements DriverInterface
 	{
 		$this->redis = $redis;
 	}
+
+	/**
+	 * Queue Methods
+	 * 
+	 * ------------------------------------------------------------------------
+	 */
 
 	/** 
 	 * Sets the queues key prefix
@@ -92,17 +98,17 @@ class RedisDriver implements DriverInterface
 	{
 		$id = $job->id(); // get the job id
 
-		$this->redis->lPush($this->queuePrefix . static::WAITLIST, $id);
+		$this->redis->lPush($this->queuePrefix . static::REDIS_KEY_WAITLIST, $id);
 
-		$this->redis->set($this->queuePrefix . static::ATTEMPT . $id, 0);
-		$this->redis->set($this->queuePrefix . static::MAX_RETRIES . $id, $maxRetries);
-		$this->redis->set($this->queuePrefix . static::DATA . $id, $job->serialize());
+		$this->redis->set($this->queuePrefix . static::REDIS_KEY_ATTEMPT . $id, 0);
+		$this->redis->set($this->queuePrefix . static::REDIS_KEY_MAX_RETRIES . $id, $maxRetries);
+		$this->redis->set($this->queuePrefix . static::REDIS_KEY_DATA . $id, $job->serialize());
 
 		// timeout the queue elements after an hour 
 		// if there is an error somewhere this way we at least clear the garbage
-		$this->redis->expire($this->queuePrefix . static::ATTEMPT . $id, 3600);
-		$this->redis->expire($this->queuePrefix . static::MAX_RETRIES . $id, 3600);
-		$this->redis->expire($this->queuePrefix . static::DATA . $id, 3600);
+		$this->redis->expire($this->queuePrefix . static::REDIS_KEY_ATTEMPT . $id, 3600);
+		$this->redis->expire($this->queuePrefix . static::REDIS_KEY_MAX_RETRIES . $id, 3600);
+		$this->redis->expire($this->queuePrefix . static::REDIS_KEY_DATA . $id, 3600);
 	}
 
 	/**
@@ -114,7 +120,7 @@ class RedisDriver implements DriverInterface
 	public function get(string $id) : ?Job
 	{
 		// get the data
-		if (!$data = $this->redis->get($this->queuePrefix . static::DATA . $id)) {
+		if (!$data = $this->redis->get($this->queuePrefix . static::REDIS_KEY_DATA . $id)) {
 			return null;
 		}
 
@@ -129,7 +135,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function popWaitingId() : ?string
 	{
-		return $this->redis->rPop($this->queuePrefix . static::WAITLIST) ?: null;
+		return $this->redis->rPop($this->queuePrefix . static::REDIS_KEY_WAITLIST) ?: null;
 	}
 
 	/**
@@ -139,7 +145,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function waitingCount() : int
 	{
-		return (int) $this->redis->lLen($this->queuePrefix . static::WAITLIST);
+		return (int) $this->redis->lLen($this->queuePrefix . static::REDIS_KEY_WAITLIST);
 	}
 
 	/**
@@ -150,8 +156,8 @@ class RedisDriver implements DriverInterface
 	 */
 	public function retry(string $id)
 	{
-		$this->redis->incr($this->queuePrefix . static::ATTEMPT . $id);
-		$this->redis->lPush($this->queuePrefix . static::WAITLIST, $id);
+		$this->redis->incr($this->queuePrefix . static::REDIS_KEY_ATTEMPT . $id);
+		$this->redis->lPush($this->queuePrefix . static::REDIS_KEY_WAITLIST, $id);
 	}
 
 	/**
@@ -162,7 +168,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function getMaxRetries(string $id) : int
 	{
-		if (($c = $this->redis->get($this->queuePrefix . static::MAX_RETRIES . $id)) !== false) return (int) $c;
+		if (($c = $this->redis->get($this->queuePrefix . static::REDIS_KEY_MAX_RETRIES . $id)) !== false) return (int) $c;
 		return -1;
 	}
 
@@ -174,7 +180,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function attemptCount(string $id) : int
 	{
-		if (($c = $this->redis->get($this->queuePrefix . static::ATTEMPT . $id)) !== false) return (int) $c;
+		if (($c = $this->redis->get($this->queuePrefix . static::REDIS_KEY_ATTEMPT . $id)) !== false) return (int) $c;
 		return -1;
 	}
 
@@ -186,9 +192,9 @@ class RedisDriver implements DriverInterface
 	public function cleanup(string $id)
 	{
 		$this->redis->del([
-			$this->queuePrefix . static::ATTEMPT . $id,
-			$this->queuePrefix . static::MAX_RETRIES . $id,
-			$this->queuePrefix . static::DATA . $id,
+			$this->queuePrefix . static::REDIS_KEY_ATTEMPT . $id,
+			$this->queuePrefix . static::REDIS_KEY_MAX_RETRIES . $id,
+			$this->queuePrefix . static::REDIS_KEY_DATA . $id,
 		]);
 	}
 
@@ -205,6 +211,12 @@ class RedisDriver implements DriverInterface
 	}
 
 	/**
+	 * Stats Methods
+	 * 
+	 * ------------------------------------------------------------------------
+	 */
+
+	/**
 	 * Simply store a value
 	 *
 	 * @param string 			$key
@@ -213,7 +225,7 @@ class RedisDriver implements DriverInterface
 	 */
 	public function storeStatsValue(string $key, $value)
 	{
-		$this->redis->set($this->queuePrefix . static::STATS . $key, serialize($value));
+		$this->redis->set($this->queuePrefix . static::REDIS_KEY_STATS . $key, serialize($value));
 	}
 
 	/**
@@ -224,12 +236,18 @@ class RedisDriver implements DriverInterface
 	 */
 	public function getStatsValue(string $key)
 	{
-		if (($raw = $this->redis->get($this->queuePrefix . static::STATS . $key)) === false) {
+		if (($raw = $this->redis->get($this->queuePrefix . static::REDIS_KEY_STATS . $key)) === false) {
 			throw new InvalidDataException("Could not read stats value from redis.");
 		}
 
 		return unserialize($raw);
 	}
+
+	/**
+	 * Locking System Methods
+	 * 
+	 * ------------------------------------------------------------------------
+	 */
 
 	/**
 	 * Checks if the given key is locked on the driver.

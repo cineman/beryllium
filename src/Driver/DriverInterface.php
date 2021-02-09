@@ -7,6 +7,12 @@ use Beryllium\Job;
 interface DriverInterface
 {
     /**
+     * Queue Methods
+     * 
+     * ------------------------------------------------------------------------
+     */
+
+    /**
      * Adds the given Job to the queue
      *
      * @param Job           $job
@@ -78,6 +84,12 @@ interface DriverInterface
     public function clearEverything();
 
     /**
+     * Stats Methods
+     * 
+     * ------------------------------------------------------------------------
+     */
+
+    /**
      * Simply store a value
      *
      * @param string            $key
@@ -93,6 +105,12 @@ interface DriverInterface
      * @return mixed
      */
     public function getStatsValue(string $key);
+
+    /**
+     * Locking System Methods
+     * 
+     * ------------------------------------------------------------------------
+     */
 
     /**
      * Checks if the given key is locked on the driver.

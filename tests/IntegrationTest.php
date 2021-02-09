@@ -94,15 +94,15 @@ class IntegrationTest extends \PHPUnit\Framework\TestCase
         $incrfile = '/tmp/beryllium.test.incr';
         file_put_contents($incrfile, '0');
 
-        for($i=0; $i<10; $i++) {
+        for($i=0; $i<100; $i++) {
             $queue->add('file.incr_test', ['file' => $incrfile], 1000);
         }
 
         // wait for second
-        sleep(1);
+        sleep(3);
 
         // check the increment result
-        $this->assertEquals(10, file_get_contents($incrfile));
+        $this->assertEquals(100, file_get_contents($incrfile));
 
         $pm->stop();
     }
