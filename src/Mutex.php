@@ -50,6 +50,16 @@ class Mutex
     }
 
     /**
+     * Returns the currents mutexes lock key
+     *
+     * @return string 
+     */
+    public function getMutexKey() : string
+    {
+        return $this->lockkey;
+    }
+
+    /**
      * Lock the mutex
      *
      * @throws LockedMutexException

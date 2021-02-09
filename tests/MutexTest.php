@@ -40,7 +40,11 @@ class MutexTest extends \PHPUnit\Framework\TestCase
     {
         static::ensureDriver();
 
-        $this->assertInstanceOf(Mutex::class, $this->createMutex('test'));
+        $mutex = $this->createMutex('test');
+
+        $this->assertInstanceOf(Mutex::class, $mutex);
+
+        $this->assertEquals('test', $mutex->getMutexKey());
     }
 
     public function testLockingSync()
