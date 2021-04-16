@@ -95,6 +95,29 @@ class Queue
 	}
 
 	/**
+	 * Returns a queue stat value by key
+	 *
+	 * @param string 			$key
+	 * @return mixed
+	 */
+	public function statsGetValue(string $key)
+	{
+		return $this->driver->getStatsValue($key);
+	}
+
+	/**
+	 * Stores a queue stat value by key
+	 *
+	 * @param string 			$key
+	 * @param mixed 			$value
+	 * @return void
+	 */
+	public function statsSetValue(string $key, $value)
+	{
+		return $this->driver->storeStatsValue($key, $value);
+	}
+
+	/**
 	 * Store the current number of active workers
 	 * This is used for debugging and maintanance
 	 *
@@ -104,6 +127,17 @@ class Queue
 	public function statsSetActiveWorkers(int $num)
 	{
 		$this->driver->storeStatsValue('active_workers', $num);
+	}
+
+	/**
+	 * Store the current number of active workers
+	 * This is used for debugging and maintanance
+	 *
+	 * @return int
+	 */
+	public function statsGetActiveWorkers() : int
+	{
+		return $this->driver->getStatsValue('active_workers');
 	}
 
 	/**
