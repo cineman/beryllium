@@ -87,8 +87,11 @@ class ProcessManager
 					}
 
 					if ($printWorkerOutput) echo "[{$jobId}] {$process->getOutput()}\n";
-					
+
 					unset($this->workers[$jobId]);
+
+                    // update the number of active jobs
+                    $this->queue->statsSetActiveWorkers(count($this->workers));
 				}
 			}
 
