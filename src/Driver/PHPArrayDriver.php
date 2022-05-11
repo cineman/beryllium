@@ -7,15 +7,50 @@ use Beryllium\Job;
 class PHPArrayDriver implements DriverInterface
 {
     /**
+     * Array queued jobs
+     * 
+     * @var array<string, Job>
+     */
+    private array $jobs = [];
+
+    /**
+     * @var array<string>
+     */
+    private array $waitlist = [];
+
+    /**
+     * @var array<string, int>
+     */
+    private array $maxRetires = [];
+
+    /**
+     * @var array<string, int>
+     */
+    private array $retryCount = [];
+
+    /**
+     * @var array<string, mixed>
+     */
+    private array $stats = [];
+
+    /**
+     * @var array<string, array{string, int}>
+     */
+    private array $locks = [];
+
+    /**
      * Adds the given Job to the queue
      *
      * @param Job           $job
      * @param int           $maxRetries
      * @return void
      */
-    public function add(Job $job, int $maxRetries = 3)
+    public function add(Job $job, int $maxRetries = 3) : void
     {
-
+        $this->jobs[$job->id()] = $job;
+        $this->maxRetires[$job->id()] = $maxRetries;
+        $this->retryCount[$job->id()] = 0;
+        $this->waitlist[] = $job->id();
     }
 
     /**
@@ -26,7 +61,7 @@ class PHPArrayDriver implements DriverInterface
      */
     public function get(string $id) : ?Job
     {
-
+        return $this->jobs[$id] ?? null;
     }
 
     /**
@@ -36,7 +71,7 @@ class PHPArrayDriver implements DriverInterface
      */
     public function popWaitingId() : ?string
     {
-
+        return array_shift($this->waitlist);
     }
 
     /**
@@ -46,7 +81,7 @@ class PHPArrayDriver implements DriverInterface
      */
     public function waitingCount() : int
     {
-
+        return count($this->waitlist);
     }
 
     /**
@@ -55,9 +90,10 @@ class PHPArrayDriver implements DriverInterface
      * @param string            $id The Job identifier.
      * @return void
      */
-    public function retry(string $id)
+    public function retry(string $id) : void
     {
-
+        $this->retryCount[$id]++;
+        $this->waitlist[] = $id;
     }
 
     /**
@@ -68,7 +104,7 @@ class PHPArrayDriver implements DriverInterface
      */
     public function getMaxRetries(string $id) : int
     {
-
+        return $this->maxRetires[$id] ?? -1;
     }
 
     /**
@@ -79,7 +115,7 @@ class PHPArrayDriver implements DriverInterface
      */
     public function attemptCount(string $id) : int
     {
-
+        return $this->retryCount[$id] ?? -1;
     }
 
     /**
@@ -88,9 +124,13 @@ class PHPArrayDriver implements DriverInterface
      * @param string            $id The Job identifier.
      * @return void
      */
-    public function cleanup(string $id)
+    public function cleanup(string $id) : void
     {
-
+        unset(
+            $this->jobs[$id],
+            $this->maxRetires[$id],
+            $this->retryCount[$id]
+        );
     }
 
     /**
@@ -99,9 +139,12 @@ class PHPArrayDriver implements DriverInterface
      * 
      * @return void
      */
-    public function clearEverything()
+    public function clearEverything() : void
     {
-
+        $this->jobs = [];
+        $this->waitlist = [];
+        $this->maxRetires = [];
+        $this->retryCount = [];
     }
 
     /**
@@ -111,9 +154,9 @@ class PHPArrayDriver implements DriverInterface
      * @param mixed             $value
      * @return void
      */
-    public function storeStatsValue(string $key, $value)
+    public function storeStatsValue(string $key, $value) : void
     {
-
+        $this->stats[$key] = $value;
     }
 
     /**
@@ -124,7 +167,7 @@ class PHPArrayDriver implements DriverInterface
      */
     public function getStatsValue(string $key)
     {
-
+        return $this->stats[$key] ?? null;
     }
 
     /**
@@ -135,7 +178,7 @@ class PHPArrayDriver implements DriverInterface
      */
     public function isLocked(string $key) : bool
     {
-
+        return isset($this->locks[$key]);
     }
 
     /**
@@ -146,7 +189,7 @@ class PHPArrayDriver implements DriverInterface
      */
     public function getLockToken(string $key) : ?string
     {
-
+        return $this->locks[$key][0] ?? null;
     }
 
     /**
@@ -160,7 +203,12 @@ class PHPArrayDriver implements DriverInterface
      */
     public function lock(string $key, string $token, int $ttl) : bool
     {
+        if (isset($this->locks[$key])) {
+            return false;
+        }
 
+        $this->locks[$key] = [$token, $ttl];
+        return true;
     }
 
     /**
@@ -174,6 +222,15 @@ class PHPArrayDriver implements DriverInterface
      */
     public function unlock(string $key, string $token) : bool
     {
+        if (!isset($this->locks[$key])) {
+            return false;
+        }
 
+        if ($this->locks[$key][0] !== $token) {
+            return false;
+        }
+
+        unset($this->locks[$key]);
+        return true;
     }
 }

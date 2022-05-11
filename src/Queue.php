@@ -8,15 +8,11 @@ class Queue
 {	
 	/**
 	 * The driver to read the queue
-	 *
-	 * @var DriverInterface
 	 */
-	protected $driver;
+	protected DriverInterface $driver;
 
 	/**
-	 * Construct
-	 *
-	 * @param DriverInterface 			$driver
+	 * Constructor 
 	 */
 	public function __construct(DriverInterface $driver)
 	{
@@ -26,7 +22,7 @@ class Queue
 	/**
 	 * Retrieve the id of the next job or null if there is nothing todo
 	 *
-	 * @return string 
+	 * @return string|null
 	 */
 	public function getNextJobId() : ?string
 	{
@@ -37,7 +33,7 @@ class Queue
 	 * Get a specific job from the queue by id
 	 *
 	 * @param string 				$jobId
-	 * @return Job
+	 * @return Job|null
 	 */
 	public function get(string $jobId) : ?Job
 	{
@@ -66,7 +62,7 @@ class Queue
 	 * @param string 			$jobId
 	 * @return void
 	 */
-	public function done(string $jobId)
+	public function done(string $jobId) : void
 	{
 		$this->driver->cleanup($jobId);
 	}
@@ -112,9 +108,9 @@ class Queue
 	 * @param mixed 			$value
 	 * @return void
 	 */
-	public function statsSetValue(string $key, $value)
+	public function statsSetValue(string $key, $value) : void
 	{
-		return $this->driver->storeStatsValue($key, $value);
+		$this->driver->storeStatsValue($key, $value);
 	}
 
 	/**
@@ -124,7 +120,7 @@ class Queue
 	 * @param int 			$num
 	 * @return void
 	 */
-	public function statsSetActiveWorkers(int $num)
+	public function statsSetActiveWorkers(int $num) : void
 	{
 		$this->driver->storeStatsValue('active_workers', $num);
 	}

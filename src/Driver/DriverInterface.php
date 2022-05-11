@@ -19,7 +19,7 @@ interface DriverInterface
      * @param int           $maxRetries
      * @return void
      */
-    public function add(Job $job, int $maxRetries = 3);
+    public function add(Job $job, int $maxRetries = 3) : void;
 
     /**
      * Get a job instance by the given id.
@@ -49,7 +49,7 @@ interface DriverInterface
      * @param string            $id The Job identifier.
      * @return void
      */
-    public function retry(string $id);
+    public function retry(string $id) : void;
 
     /**
      * Get the maximum number of attempts we should try for the job
@@ -73,7 +73,7 @@ interface DriverInterface
      * @param string            $id The Job identifier.
      * @return void
      */
-    public function cleanup(string $id);
+    public function cleanup(string $id) : void;
 
     /**
      * Will clear freaking everything releated to the driver
@@ -81,7 +81,7 @@ interface DriverInterface
      * 
      * @return void
      */
-    public function clearEverything();
+    public function clearEverything() : void;
 
     /**
      * Stats Methods
@@ -96,7 +96,7 @@ interface DriverInterface
      * @param mixed             $value
      * @return void
      */
-    public function storeStatsValue(string $key, $value);
+    public function storeStatsValue(string $key, $value) : void;
 
     /**
      * Simply get a value

@@ -1,5 +1,7 @@
 parameters:
     ignoreErrors:
-        - '/Method Beryllium\\Driver\\PHPArrayDriver\:\:.*/'
     bootstrapFiles:
         - test-bootstrap.php
+    level: 8˚
+    paths:
+        - src

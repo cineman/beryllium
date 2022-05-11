@@ -11,24 +11,18 @@ class RedisDriver implements DriverInterface
 {	
 	/** 
 	 * Get the redis connection
-	 *
-	 * @var Redis
 	 */
-	protected $redis;
+	protected Redis $redis;
 
 	/**
 	 * The redis key prefix
-	 *
-	 * @var string
 	 */
-	protected $queuePrefix = 'beryllium.queue.';
+	protected string $queuePrefix = 'beryllium.queue.';
 
 	/**
 	 * The redis lock key prefix
-	 *
-	 * @var string
 	 */
-	protected $lockPrefix = 'beryllium.lock.';
+	protected string $lockPrefix = 'beryllium.lock.';
 
 	/**
 	 * Redis Keys
@@ -40,9 +34,7 @@ class RedisDriver implements DriverInterface
 	const REDIS_KEY_STATS = 'stats.';
 
 	/**
-	 * Construct
-	 *
-	 * @param Redis 			$redis 
+	 * Constructor
 	 */
 	public function __construct(Redis $redis)
 	{
@@ -94,7 +86,7 @@ class RedisDriver implements DriverInterface
 	 * @param Job 			$job
 	 * @param int 			$maxRetries
 	 */
-	public function add(Job $job, int $maxRetries = 3)
+	public function add(Job $job, int $maxRetries = 3) : void
 	{
 		$id = $job->id(); // get the job id
 
@@ -154,7 +146,7 @@ class RedisDriver implements DriverInterface
 	 * @param string 			$id
 	 * @return void
 	 */
-	public function retry(string $id)
+	public function retry(string $id) : void
 	{
 		$this->redis->incr($this->queuePrefix . static::REDIS_KEY_ATTEMPT . $id);
 		$this->redis->lPush($this->queuePrefix . static::REDIS_KEY_WAITLIST, $id);
@@ -189,7 +181,7 @@ class RedisDriver implements DriverInterface
 	 *
 	 * @param string 			$id
 	 */
-	public function cleanup(string $id)
+	public function cleanup(string $id) : void
 	{
 		$this->redis->del([
 			$this->queuePrefix . static::REDIS_KEY_ATTEMPT . $id,
@@ -204,7 +196,7 @@ class RedisDriver implements DriverInterface
 	 * 
 	 * @return void
 	 */
-	public function clearEverything()
+	public function clearEverything() : void
 	{
 		$this->redis->del($this->redis->keys($this->queuePrefix . '*'));
 		$this->redis->del($this->redis->keys($this->lockPrefix . '*'));
@@ -223,7 +215,7 @@ class RedisDriver implements DriverInterface
 	 * @param mixed 			$value
 	 * @return void
 	 */
-	public function storeStatsValue(string $key, $value)
+	public function storeStatsValue(string $key, $value) : void
 	{
 		$this->redis->set($this->queuePrefix . static::REDIS_KEY_STATS . $key, serialize($value));
 	}
