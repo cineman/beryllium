@@ -2,6 +2,6 @@ parameters:
     ignoreErrors:
     bootstrapFiles:
         - test-bootstrap.php
-    level: 8˚
+    level: 8
     paths:
         - src
