@@ -24,12 +24,11 @@ jobs:
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-suggest
-    
-    - name: Install PHPUnit 
-      run: composer require phpunit/phpunit --dev
       
     - name: Run PHPUnit 
       run: php vendor/bin/phpunit 
+      env:
+          PHPUNIT_BERYILLIUM_PARALLEL_WAIT: 15
       
     - name: Run PHPStan 
-      run: php vendor/bin/phpstan analyse src --error-format=github -l7
+      run: php vendor/bin/phpstan analyse src --error-format=github -l8
