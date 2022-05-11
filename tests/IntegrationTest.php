@@ -99,7 +99,7 @@ class IntegrationTest extends \PHPUnit\Framework\TestCase
         }
 
         // wait for second
-        sleep(3);
+        sleep(getenv('PHPUNIT_BERYILLIUM_PARALLEL_WAIT') ?: 3);
 
         // check the increment result
         $this->assertEquals(100, file_get_contents($incrfile));
