@@ -43,15 +43,20 @@ class Queue
 	/**
 	 * Create a new job and enqueue it.
 	 *
-	 * @param string 			$action
-	 * @param array<mixed> 		$parameters
-	 * @param int 				$maxRetries
+	 * @param string $action The action to perform
+	 * @param array<mixed> $parameters The parameters for the job
+	 * @param int $maxRetries The maximum number of retries
+	 * @param string $jobId Speicify the job id instead of generating random one
 	 *
 	 * @return Job Returns the job 
 	 */
-	public function add(string $action, array $parameters = [], int $maxRetries = 3) : Job
+	public function add(string $action, array $parameters = [], int $maxRetries = 3, string $jobId = '') : Job
 	{
-		$job = new Job(uniqid('', true), $action, $parameters);
+		$job = new Job(
+			$jobId !== '' ? $jobId : uniqid('', true),
+			$action,
+			$parameters
+		);
 		$this->driver->add($job, $maxRetries);
 		return $job;
 	}
