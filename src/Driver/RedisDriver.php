@@ -149,7 +149,7 @@ class RedisDriver implements DriverInterface
      */
     public function popWaitingId() : ?string
     {
-        return $this->redis->rPop($this->queuePrefix . static::REDIS_KEY_WAITLIST) ?: null;
+        return (string)$this->redis->rPop($this->queuePrefix . static::REDIS_KEY_WAITLIST) ?: null;
     }
 
     /**
