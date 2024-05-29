@@ -2,4 +2,6 @@
 
 namespace Beryllium\Exception;
 
-class InvalidDataException extends \Beryllium\Exception {}
+class InvalidDataException extends \Beryllium\Exception
+{
+}

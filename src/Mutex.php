@@ -134,10 +134,10 @@ class Mutex
 
         try {
             $callback($this->token);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->unlock();
             throw $e;
-        } catch(\Error $e) {
+        } catch (\Error $e) {
             $this->unlock();
             throw $e;
         }

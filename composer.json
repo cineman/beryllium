@@ -8,12 +8,14 @@
     ],
     "bin": [],
     "require": {
-        "php": ">=7.4",
+        "php": "^8.1",
         "symfony/process": "^5.4"
     },
     "require-dev": {
-        "phpstan/phpstan": "^1.5",
-        "phpunit/phpunit": "^9.5"
+        "phpunit/phpunit": "^9.5",
+        "cineman/hydrogen-cs": "dev-master",
+        "phpstan/phpstan": "^1.7.0",
+        "squizlabs/php_codesniffer": "^3.5"
     },
     "autoload": {
         "psr-4": {
@@ -26,5 +28,16 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts": {
+        "ci-phpcs": [
+            "vendor/bin/phpcs src/ --standard=vendor/cineman/hydrogen-cs"
+        ],
+        "ci-phpcs-fix": [
+            "vendor/bin/phpcbf src/ --standard=vendor/cineman/hydrogen-cs"
+        ],
+        "ci-phpstan": [
+            "vendor/bin/phpstan analyse src --error-format=github -l8"
+        ]
+    }
 }

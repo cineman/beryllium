@@ -2,4 +2,6 @@
 
 namespace Beryllium;
 
-class Exception extends \Exception {}
+class Exception extends \Exception
+{
+}

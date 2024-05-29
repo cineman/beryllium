@@ -3,6 +3,7 @@
 namespace Beryllium\Driver;
 
 use Beryllium\Job;
+use Generator;
 
 interface DriverInterface
 {
@@ -28,6 +29,14 @@ interface DriverInterface
      * @return Job
      */
     public function get(string $id) : ?Job;
+
+    /**
+     * Check if a job exists in the queue
+     * @param string $id 
+     * 
+     * @return bool 
+     */
+    public function exists(string $id) : bool;
 
     /**
      * Get the ID of a waiting job

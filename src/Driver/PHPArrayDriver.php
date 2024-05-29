@@ -3,6 +3,7 @@
 namespace Beryllium\Driver;
 
 use Beryllium\Job;
+use Generator;
 
 class PHPArrayDriver implements DriverInterface
 {
@@ -62,6 +63,17 @@ class PHPArrayDriver implements DriverInterface
     public function get(string $id) : ?Job
     {
         return $this->jobs[$id] ?? null;
+    }
+
+    /**
+     * Check if a job exists in the queue
+     * @param string $id 
+     * 
+     * @return bool 
+     */
+    public function exists(string $id) : bool
+    {
+        return array_key_exists($id, $this->jobs);
     }
 
     /**
