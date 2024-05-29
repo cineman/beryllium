@@ -16,10 +16,10 @@ use Beryllium\Driver\RedisDriver;
 /**
  * Redis hostname and port by define
  */
-if (!defined('BERYLLIUM_REDIS_HOST')) define('BERYLLIUM_REDIS_HOST', '127.0.0.1');
-if (!defined('BERYLLIUM_REDIS_PORT')) define('BERYLLIUM_REDIS_PORT', 6379);
-if (!defined('BERYLLIUM_IDLE_WAIT')) define('BERYLLIUM_IDLE_WAIT', 10000); // 10ms
-if (!defined('BERYLLIUM_MAX_WORKERS')) define('BERYLLIUM_MAX_WORKERS', 8);
+if (!defined('BERYLLIUM_REDIS_HOST')) define('BERYLLIUM_REDIS_HOST', getenv('BERYLLIUM_REDIS_HOST'));
+if (!defined('BERYLLIUM_REDIS_PORT')) define('BERYLLIUM_REDIS_PORT', getenv('BERYLLIUM_REDIS_PORT'));
+if (!defined('BERYLLIUM_IDLE_WAIT')) define('BERYLLIUM_IDLE_WAIT', getenv('BERYLLIUM_IDLE_WAIT'));
+if (!defined('BERYLLIUM_MAX_WORKERS')) define('BERYLLIUM_MAX_WORKERS', getenv('BERYLLIUM_MAX_WORKERS'));
 
 /**
  * Create a queue instance with the default configuration
