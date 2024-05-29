@@ -38,6 +38,6 @@ jobs:
       run: composer install --prefer-dist --no-progress --no-suggest
       
     - name: Run PHPUnit 
-      run: composer run-script ci-phpcs
+      run: composer run-script ci-phpunit
       env:
           PHPUNIT_BERYILLIUM_PARALLEL_WAIT: 15

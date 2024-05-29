@@ -47,6 +47,9 @@
         ],
         "ci-phpstan": [
             "vendor/bin/phpstan analyse src --error-format=github -l8"
+        ],
+        "ci-phpunit": [
+            "vendor/bin/phpunit"
         ]
     }
 }
