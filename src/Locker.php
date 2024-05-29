@@ -16,7 +16,8 @@ class Locker
     /**
      * Constructor
      *
-     * @param DriverInterface               $driver The beryllium driver.
+     * @param DriverInterface $driver The beryllium driver.
+     * 
      * @return void 
      */
     public function __construct(DriverInterface $driver)
@@ -27,7 +28,8 @@ class Locker
     /**
      * Creates a mutex with the given key and the locker assigned driver
      *
-     * @param string                $lockkey
+     * @param string $lockkey
+     * 
      * @return Mutex
      */
     public function mutex(string $lockkey) : Mutex

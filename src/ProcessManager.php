@@ -51,8 +51,8 @@ class ProcessManager
     /**
      * Construct
      *
-     * @param Queue             $queue
-     * @param string            $processPattern           
+     * @param Queue $queue
+     * @param string $processPattern           
      */
     public function __construct(Queue $queue, string $processPattern)
     {
@@ -66,7 +66,7 @@ class ProcessManager
      *
      * @return void
      */
-    public function work(bool $verbose = false, bool $printWorkerOutput = false)
+    public function work(bool $verbose = false, bool $printWorkerOutput = false) : void
     {
         while (!$this->shouldExit)
         {
@@ -129,10 +129,11 @@ class ProcessManager
     /**
      * Set the sleep time in microseconds
      *
-     * @param int           $idleWait
+     * @param int $idleWait
+     * 
      * @return self
      */
-    public function setIdleWait(int $idleWait)
+    public function setIdleWait(int $idleWait) : self
     {
         $this->idleWait = $idleWait; return $this;
     }
@@ -150,10 +151,11 @@ class ProcessManager
     /**
      * Set maximum allowed number of concurrent workers
      *
-     * @param int           $maxWorkers
+     * @param int $maxWorkers
+     * 
      * @return self
      */
-    public function setMaxWorkers(int $maxWorkers)
+    public function setMaxWorkers(int $maxWorkers) : self
     {
         $this->maxWorkers = $maxWorkers; return $this;
     }

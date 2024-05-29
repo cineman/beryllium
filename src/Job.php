@@ -7,27 +7,6 @@ use Beryllium\Exception\InvalidJobException;
 class Job
 {
     /**
-     * Unserialize the given data to a job
-     * 
-     * @param string                $data
-     * @return Job
-     */
-    public static function unserialize(string $data) : ?Job
-    {
-        $data = json_decode($data, true); 
-
-        if (
-            (!isset($data['id'])) || 
-            (!isset($data['action'])) || 
-            (!isset($data['data']))
-        ) {
-            return null;
-        }
-
-        return new Job($data['id'], $data['action'], $data['data']);
-    }
-
-    /**
      * The jobs id
      *
      * @var string
@@ -51,9 +30,9 @@ class Job
     /**
      * Construct
      *
-     * @param string            $id
-     * @param string            $action
-     * @param array<mixed>      $parameters
+     * @param string $id
+     * @param string $action
+     * @param array<mixed> $parameters
      */
     public function __construct(string $id, string $action, array $parameters = [])
     {
@@ -95,11 +74,12 @@ class Job
     /**
      * Get a specific parameter from the job
      *
-     * @param string                $key
-     * @param mixed                 $default 
+     * @param string $key
+     * @param mixed $default 
+     * 
      * @return mixed
      */
-    public function parameter(string $key, $default = null)
+    public function parameter(string $key, $default = null) : mixed
     {
         return $this->parameters[$key] ?? $default;
     }
@@ -107,9 +87,9 @@ class Job
     /** 
      * Serialize the Job
      *
-     * @throws InvalidJobException
-     *
      * @return string
+     * 
+     * @throws InvalidJobException
      */
     public function serialize() : string
     {
@@ -118,5 +98,25 @@ class Job
         }
 
         return $serialized;
+    }
+
+    /**
+     * Unserialize the given data to a job
+     * 
+     * @param string $data
+     * 
+     * @return Job
+     */
+    public static function unserialize(string $data) : ?Job
+    {
+        $data = json_decode($data, true); 
+
+        if ((!isset($data['id'])) || 
+            (!isset($data['action'])) || 
+            (!isset($data['data']))) {
+            return null;
+        }
+
+        return new Job($data['id'], $data['action'], $data['data']);
     }
 }

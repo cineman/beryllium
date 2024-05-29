@@ -3,11 +3,16 @@
 namespace Beryllium;
 
 use Beryllium\Driver\DriverInterface;
-
 use Beryllium\Exception\LockedMutexException;
 
 class Mutex
 {
+    /**
+     * Error codes
+     */
+    public const ERROR_ALREADY_LOCKED = 5;
+    public const ERROR_UNLOCK_FAILURE = 10;
+
     /**
      * Driver instance
      *
@@ -31,16 +36,11 @@ class Mutex
     private string $token;
 
     /**
-     * Error codes
-     */
-    const ERROR_ALREADY_LOCKED = 5;
-    const ERROR_UNLOCK_FAILURE = 10;
-
-    /**
      * Constructor
      *
-     * @param DriverInterface               $driver The beryllium driver.
-     * @param string                        $lockkey
+     * @param DriverInterface $driver The beryllium driver.
+     * @param string $lockkey
+     * 
      * @return void 
      */
     public function __construct(DriverInterface $driver, string $lockkey)
@@ -61,13 +61,14 @@ class Mutex
 
     /**
      * Lock the mutex
-     *
-     * @throws LockedMutexException
      * 
-     * @param int               $ttl Max time to live in seconds.
+     * @param int $ttl Max time to live in seconds.
+     * 
      * @return void
+     * 
+     * @throws LockedMutexException
      */
-    public function lock(int $ttl = 30)
+    public function lock(int $ttl = 30) : void
     {
         // generate a token
         $this->token = uniqid();
@@ -104,16 +105,19 @@ class Mutex
 
     /**
      * Lock the mutex
-     *
-     * @throws LockedMutexException
      * 
-     * @return void
+     * @return void 
+     * 
+     * @throws LockedMutexException 
      */
-    public function unlock()
+    public function unlock() : void
     {
         // try to lock on the driver
         if (!$this->driver->unlock($this->lockkey, $this->token)) {
-            throw new LockedMutexException("The mutex ($this->lockkey) could not be unlocked, either its been locked by another instance or it does not exist.", static::ERROR_UNLOCK_FAILURE);
+            throw new LockedMutexException(
+                "The mutex ($this->lockkey) could not be unlocked, either its been locked by another instance or it does not exist.", 
+                static::ERROR_UNLOCK_FAILURE
+            );
         }
     }
 
@@ -121,14 +125,15 @@ class Mutex
      * Runs the given callback in a mutex locked enclosure.
      * Catches any error that might occour and unlocks the mutex and rethrows the error / exception.
      *
+     * @param callable $callback 
+     * @param int $ttl
+     * 
+     * @return void
+     * 
      * @throws \Error
      * @throws \Exception
-     *
-     * @param callable              $callback 
-     * @param int                   $ttl
-     * @return void
      */
-    public function safeExec(callable $callback, int $ttl = 10)
+    public function safeExec(callable $callback, int $ttl = 10) : void
     {
         $this->lock($ttl);
 

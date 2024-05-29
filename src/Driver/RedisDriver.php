@@ -6,10 +6,18 @@ use Redis;
 use Beryllium\Job;
 
 use Beryllium\Exception\InvalidDataException;
-use Generator;
 
 class RedisDriver implements DriverInterface
 {
+    /**
+     * Redis Keys
+     */
+    public const REDIS_KEY_WAITLIST = 'waitlist';
+    public const REDIS_KEY_ATTEMPT = 'attempt.';
+    public const REDIS_KEY_MAX_RETRIES = 'max_retries.';
+    public const REDIS_KEY_DATA = 'data.';
+    public const REDIS_KEY_STATS = 'stats.';
+
     /** 
      * Get the redis connection
      */
@@ -24,15 +32,6 @@ class RedisDriver implements DriverInterface
      * The redis lock key prefix
      */
     protected string $lockPrefix = 'beryllium.lock.';
-
-    /**
-     * Redis Keys
-     */
-    const REDIS_KEY_WAITLIST = 'waitlist';
-    const REDIS_KEY_ATTEMPT = 'attempt.';
-    const REDIS_KEY_MAX_RETRIES = 'max_retries.';
-    const REDIS_KEY_DATA = 'data.';
-    const REDIS_KEY_STATS = 'stats.';
 
     /**
      * Constructor
@@ -82,10 +81,12 @@ class RedisDriver implements DriverInterface
     }
 
     /**
-     * Add a job to the queue
+     * Adds the given Job to the queue
      *
-     * @param Job           $job
-     * @param int           $maxRetries
+     * @param Job $job
+     * @param int $maxRetries
+     * 
+     * @return void
      */
     public function add(Job $job, int $maxRetries = 3) : void
     {
@@ -105,9 +106,10 @@ class RedisDriver implements DriverInterface
     }
 
     /**
-     * Get a job by id
+     * Get a job instance by the given id.
      *
-     * @param string            $id
+     * @param string $id The Job identifier.
+     * 
      * @return Job
      */
     public function get(string $id) : ?Job
@@ -123,7 +125,8 @@ class RedisDriver implements DriverInterface
 
     /**
      * Check if a job exists in the queue
-     * @param string $id 
+     * 
+     * @param string $id The Job identifier.
      * 
      * @return bool 
      */
@@ -145,7 +148,7 @@ class RedisDriver implements DriverInterface
     /**
      * Get the ID of a waiting job
      *
-     * @return string
+     * @return string|null Returns null if no job is queued.
      */
     public function popWaitingId() : ?string
     {
@@ -165,7 +168,8 @@ class RedisDriver implements DriverInterface
     /**
      * Reinsert the job into the waitlist
      *
-     * @param string            $id
+     * @param string $id The Job identifier.
+     * 
      * @return void
      */
     public function retry(string $id) : void
@@ -177,8 +181,9 @@ class RedisDriver implements DriverInterface
     /**
      * Get the maximum number of attempts we should try for the job
      *
-     * @param string                $id
-     * @return int
+     * @param string $id The Job identifier.
+     * 
+     * @return int Returns -1 if the job has never been executed
      */
     public function getMaxRetries(string $id) : int
     {
@@ -187,10 +192,11 @@ class RedisDriver implements DriverInterface
     }
 
     /**
-     * Get the number of attempts for the job
+     * Get the number of attempts this job already had.
      *
-     * @param string            $id
-     * @return int
+     * @param string $id The Job identifier.
+     * 
+     * @return int Returns -1 if the job has never been executed
      */
     public function attemptCount(string $id) : int
     {
@@ -201,7 +207,9 @@ class RedisDriver implements DriverInterface
     /**
      * Cleanup the jobs data
      *
-     * @param string            $id
+     * @param string $id The Job identifier.
+     * 
+     * @return void
      */
     public function cleanup(string $id) : void
     {
@@ -213,7 +221,7 @@ class RedisDriver implements DriverInterface
     }
 
     /**
-     * Will clear freaking everything
+     * Will clear freaking everything releated to the driver
      * !!! Attention with this one..
      * 
      * @return void
@@ -233,8 +241,9 @@ class RedisDriver implements DriverInterface
     /**
      * Simply store a value
      *
-     * @param string            $key
-     * @param mixed             $value
+     * @param string $key
+     * @param mixed $value
+     * 
      * @return void
      */
     public function storeStatsValue(string $key, $value) : void
@@ -245,7 +254,8 @@ class RedisDriver implements DriverInterface
     /**
      * Simply get a value
      *
-     * @param string            $key
+     * @param string $key
+     * 
      * @return mixed
      */
     public function getStatsValue(string $key)
@@ -266,7 +276,8 @@ class RedisDriver implements DriverInterface
     /**
      * Checks if the given key is locked on the driver.
      *
-     * @param string                    $key
+     * @param string $key
+     * 
      * @return bool
      */
     public function isLocked(string $key) : bool
@@ -277,7 +288,8 @@ class RedisDriver implements DriverInterface
     /**
      * Returns the locks token
      *
-     * @param string                    $key
+     * @param string $key
+     * 
      * @return string
      */
     public function getLockToken(string $key) : ?string
@@ -288,9 +300,9 @@ class RedisDriver implements DriverInterface
     /**
      * Creates a lock entry on the driver, this must be synchronised!
      *
-     * @param string                $key
-     * @param string                $token
-     * @param int                   $ttl
+     * @param string $key
+     * @param string $token
+     * @param int $ttl
      *
      * @return bool Returns true if the lock could be created
      */
@@ -304,10 +316,10 @@ class RedisDriver implements DriverInterface
      * Removes a lock entry on the driver, this must be synchronised!
      * Also the lock for the key should only be removed if the token matches!
      *
-     * @param string                $key
-     * @param string                $token
+     * @param string $key
+     * @param string $token
      *
-     * @return bool
+     * @return bool Retruns true if the lock could be removed.
      */
     public function unlock(string $key, string $token) : bool
     {

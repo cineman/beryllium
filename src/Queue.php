@@ -13,6 +13,8 @@ class Queue
 
     /**
      * Constructor 
+     * 
+     * @param DriverInterface $driver The beryllium driver.
      */
     public function __construct(DriverInterface $driver)
     {
@@ -32,7 +34,8 @@ class Queue
     /**
      * Get a specific job from the queue by id
      *
-     * @param string                $jobId
+     * @param string $jobId
+     * 
      * @return Job|null
      */
     public function get(string $jobId) : ?Job
@@ -43,7 +46,8 @@ class Queue
     /**
      * Check if a job exists in the queue
      *
-     * @param string                $jobId
+     * @param string $jobId
+     * 
      * @return bool
      */
     public function exists(string $jobId) : bool
@@ -75,7 +79,8 @@ class Queue
     /**
      * Mark the given job as done
      *
-     * @param string            $jobId
+     * @param string $jobId
+     * 
      * @return void
      */
     public function done(string $jobId) : void
@@ -86,7 +91,8 @@ class Queue
     /** 
      * Consider a retry of the job
      *
-     * @param string            $jobId
+     * @param string $jobId
+     * 
      * @return bool
      */
     public function considerRetry(string $jobId) : bool
@@ -109,10 +115,11 @@ class Queue
     /**
      * Returns a queue stat value by key
      *
-     * @param string            $key
+     * @param string $key
+     * 
      * @return mixed
      */
-    public function statsGetValue(string $key)
+    public function statsGetValue(string $key) : mixed
     {
         return $this->driver->getStatsValue($key);
     }
@@ -120,8 +127,9 @@ class Queue
     /**
      * Stores a queue stat value by key
      *
-     * @param string            $key
-     * @param mixed             $value
+     * @param string $key
+     * @param mixed $value
+     * 
      * @return void
      */
     public function statsSetValue(string $key, $value) : void
@@ -133,7 +141,8 @@ class Queue
      * Store the current number of active workers
      * This is used for debugging and maintanance
      *
-     * @param int           $num
+     * @param int $num
+     * 
      * @return void
      */
     public function statsSetActiveWorkers(int $num) : void
