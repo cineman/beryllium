@@ -7,34 +7,14 @@ use Beryllium\Exception\InvalidJobException;
 class Job
 {
     /**
-     * The jobs id
-     */
-    private string $id;
-
-    /**
-     * The jobs action
-     */
-    private string $action;
-
-    /**
-     * The jobs parameters
-     *
-     * @var array<mixed>
-     */
-    private array $parameters;
-
-    /**
      * Construct
      *
      * @param string $id
      * @param string $action
      * @param array<mixed> $parameters
      */
-    public function __construct(string $id, string $action, array $parameters = [])
+    public function __construct(private string $id, private string $action, private array $parameters = [])
     {
-        $this->id = $id;
-        $this->action = $action;
-        $this->parameters = $parameters;
     }
 
     /**
