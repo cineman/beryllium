@@ -7,18 +7,12 @@ use Beryllium\Driver\DriverInterface;
 class Queue
 {
     /**
-     * The driver to read the queue
-     */
-    protected DriverInterface $driver;
-
-    /**
      * Constructor 
      * 
      * @param DriverInterface $driver The beryllium driver.
      */
-    public function __construct(DriverInterface $driver)
+    public function __construct(protected DriverInterface $driver)
     {
-        $this->driver = $driver;
     }
 
     /**

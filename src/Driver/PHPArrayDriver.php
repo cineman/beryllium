@@ -59,7 +59,7 @@ class PHPArrayDriver implements DriverInterface
      *
      * @param string $id The Job identifier.
      * 
-     * @return Job
+     * @return Job|null
      */
     public function get(string $id) : ?Job
     {
@@ -185,7 +185,7 @@ class PHPArrayDriver implements DriverInterface
      * 
      * @return mixed
      */
-    public function getStatsValue(string $key)
+    public function getStatsValue(string $key) : mixed
     {
         return $this->stats[$key] ?? null;
     }
@@ -207,7 +207,7 @@ class PHPArrayDriver implements DriverInterface
      *
      * @param string $key
      * 
-     * @return string
+     * @return string|null
      */
     public function getLockToken(string $key) : ?string
     {

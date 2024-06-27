@@ -8,15 +8,11 @@ class Job
 {
     /**
      * The jobs id
-     *
-     * @var string
      */
     private string $id;
 
     /**
      * The jobs action
-     *
-     * @var string
      */
     private string $action;
 
@@ -105,7 +101,7 @@ class Job
      * 
      * @param string $data
      * 
-     * @return Job
+     * @return Job|null
      */
     public static function unserialize(string $data) : ?Job
     {

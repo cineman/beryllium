@@ -18,11 +18,6 @@ class RedisDriver implements DriverInterface
     public const REDIS_KEY_DATA = 'data.';
     public const REDIS_KEY_STATS = 'stats.';
 
-    /** 
-     * Get the redis connection
-     */
-    protected Redis $redis;
-
     /**
      * The redis key prefix
      */
@@ -35,10 +30,11 @@ class RedisDriver implements DriverInterface
 
     /**
      * Constructor
+     * 
+     * @param Redis $redis The redis instance.
      */
-    public function __construct(Redis $redis)
+    public function __construct(protected Redis $redis)
     {
-        $this->redis = $redis;
     }
 
     /**
@@ -50,20 +46,24 @@ class RedisDriver implements DriverInterface
     /** 
      * Sets the queues key prefix
      *
-     * @param string            $prefix
+     * @param string $prefix
+     * 
      * @return void
      */
-    public function setQueueKeyPrefix(string $prefix)
+    public function setQueueKeyPrefix(string $prefix) : void
     {
         $this->queuePrefix = $prefix;
     }
 
     /** 
+     * Sets the key prefix
+     * 
      * @deprecated
-     * @param string            $prefix
+     * @param string $prefix
+     * 
      * @return void
      */
-    public function setKeyPrefix(string $prefix)
+    public function setKeyPrefix(string $prefix) : void
     {
         trigger_error('Method ' . __METHOD__ . ' is deprecated, use setQueueKeyPrefix instead.', E_USER_DEPRECATED);
         $this->setQueueKeyPrefix($prefix);
@@ -72,10 +72,11 @@ class RedisDriver implements DriverInterface
     /** 
      * Sets the lock key prefix
      *
-     * @param string            $prefix
+     * @param string $prefix
+     * 
      * @return void
      */
-    public function setLockKeyPrefix(string $prefix)
+    public function setLockKeyPrefix(string $prefix) : void
     {
         $this->lockPrefix = $prefix;
     }
@@ -110,7 +111,7 @@ class RedisDriver implements DriverInterface
      *
      * @param string $id The Job identifier.
      * 
-     * @return Job
+     * @return Job|null
      */
     public function get(string $id) : ?Job
     {
@@ -258,7 +259,7 @@ class RedisDriver implements DriverInterface
      * 
      * @return mixed
      */
-    public function getStatsValue(string $key)
+    public function getStatsValue(string $key) : mixed
     {
         if (($raw = $this->redis->get($this->queuePrefix . static::REDIS_KEY_STATS . $key)) === false) {
             throw new InvalidDataException("Could not read stats value from redis.");
@@ -290,7 +291,7 @@ class RedisDriver implements DriverInterface
      *
      * @param string $key
      * 
-     * @return string
+     * @return string|null
      */
     public function getLockToken(string $key) : ?string
     {

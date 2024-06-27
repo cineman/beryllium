@@ -27,7 +27,7 @@ interface DriverInterface
      *
      * @param string $id The Job identifier.
      * 
-     * @return Job
+     * @return Job|null
      */
     public function get(string $id) : ?Job;
 
@@ -121,7 +121,7 @@ interface DriverInterface
      * 
      * @return mixed
      */
-    public function getStatsValue(string $key);
+    public function getStatsValue(string $key) : mixed;
 
     /**
      * Locking System Methods
@@ -143,7 +143,7 @@ interface DriverInterface
      *
      * @param string $key
      * 
-     * @return string
+     * @return string|null
      */
     public function getLockToken(string $key) : ?string;
 

@@ -7,22 +7,14 @@ use Beryllium\Driver\DriverInterface;
 class Locker
 {
     /**
-     * Driver instance
-     *
-     * @var DriverInterface
-     */
-    private DriverInterface $driver;
-
-    /**
      * Constructor
      *
      * @param DriverInterface $driver The beryllium driver.
      * 
      * @return void 
      */
-    public function __construct(DriverInterface $driver)
+    public function __construct(private DriverInterface $driver)
     {
-        $this->driver = $driver;
     }
 
     /**

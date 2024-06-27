@@ -12,21 +12,7 @@ class Mutex
      */
     public const ERROR_ALREADY_LOCKED = 5;
     public const ERROR_UNLOCK_FAILURE = 10;
-
-    /**
-     * Driver instance
-     *
-     * @var DriverInterface
-     */
-    private DriverInterface $driver;
-
-    /**
-     * Mutex key
-     *
-     * @var string
-     */
-    private string $lockkey;
-
+    
     /**
      * The mutex current token that ensures that only 
      * this instance can unlock a lock.
@@ -43,10 +29,8 @@ class Mutex
      * 
      * @return void 
      */
-    public function __construct(DriverInterface $driver, string $lockkey)
+    public function __construct(private DriverInterface $driver, private string $lockkey)
     {
-        $this->driver = $driver;
-        $this->lockkey = $lockkey;
     }
 
     /**

@@ -7,46 +7,24 @@ use Symfony\Component\Process\Process;
 class ProcessManager
 {
     /**
-     * A queue instance
-     *
-     * @var Queue
-     */
-    protected $queue;
-
-    /**
      * An array of workers
-     *
-     * @var array<Process>
      */
-    protected $workers = [];
+    protected array $workers = [];
 
     /**
      * Maximum number of workers
-     *
-     * @var int
      */
-    protected $maxWorkers = 32;
+    protected int $maxWorkers = 32;
 
     /**
      * Should we exit the main loop
-     *
-     * @var bool
      */
-    protected $shouldExit = false;
+    protected bool $shouldExit = false;
 
     /**
      * Idle wait in microseconds
-     *
-     * @var int
      */
-    protected $idleWait = 10000;
-
-    /**
-     * The process pattern
-     *
-     * @var string  
-     */ 
-    protected $processPattern;  
+    protected int $idleWait = 10000;
 
     /**
      * Construct
@@ -54,10 +32,8 @@ class ProcessManager
      * @param Queue $queue
      * @param string $processPattern           
      */
-    public function __construct(Queue $queue, string $processPattern)
+    public function __construct(protected Queue $queue, protected string $processPattern)
     {
-        $this->queue = $queue;
-        $this->processPattern = $processPattern;
     }
 
     /**
