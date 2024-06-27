@@ -2,10 +2,9 @@
 
 namespace Beryllium\Driver;
 
-use Redis;
-use Beryllium\Job;
-
 use Beryllium\Exception\InvalidDataException;
+use Beryllium\Job;
+use Redis;
 
 class RedisDriver implements DriverInterface
 {
