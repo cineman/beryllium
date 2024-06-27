@@ -8,6 +8,8 @@ class ProcessManager
 {
     /**
      * An array of workers
+     * 
+     * @var array<Process>
      */
     protected array $workers = [];
 
