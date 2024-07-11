@@ -1,14 +1,20 @@
-name: Hydrogen PHPUnit
+name: Tests
 
 on:
   push:
-    branches: [ master, stage ]
+    branches: [ '*' ]
   pull_request:
-    branches: [ master, stage ]
+    branches: [ '*' ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: ['ubuntu-latest']
+        php-versions: ['8.1', '8.2', '8.3']
+
     services:
       redis:
         image: redis
@@ -19,16 +25,19 @@ jobs:
           --health-retries 5
         ports:
           - 6379:6379
+
     steps:
     - uses: actions/checkout@v2
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-versions }}
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-suggest
       
     - name: Run PHPUnit 
-      run: php vendor/bin/phpunit 
+      run: composer run-script ci-phpunit
       env:
           PHPUNIT_BERYILLIUM_PARALLEL_WAIT: 15
-      
-    - name: Run PHPStan 
-      run: php vendor/bin/phpstan analyse src --error-format=github -l8

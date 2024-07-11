@@ -102,3 +102,31 @@ StartLimitBurst=10
 WantedBy=multi-user.target
 ```
 
+### Code Quality
+
+Make sure the latest quality standards are met by executing the `phpcs` and `phpstan` scripts. There are three commands available which are defined in the root `composer.json` as custom scripts.
+
+Execute `phpcs` and `phpcbf` for linting and automatic fixing respectively:
+
+```
+composer run-script ci-phpcs
+composer run-script ci-phpcs-fix
+```
+
+Execute `phpstan` to analyse the code to detect code issues.
+
+```
+composer run-script ci-phpstan
+```
+
+### Tests
+
+There are tests as part of this package in order to verify that everything works as expected. 
+
+Execute the following command to run the tests:
+
+```
+composer run-script ci-phpunit
+```
+
+**Note: You need to configure your database connection first in `phpunit.xml` before running the tests. If `phpunit.xml` does not exist, copy the `phpunit.xml.dist` file.**

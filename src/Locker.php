@@ -7,27 +7,21 @@ use Beryllium\Driver\DriverInterface;
 class Locker
 {
     /**
-     * Driver instance
-     *
-     * @var DriverInterface
-     */
-    private DriverInterface $driver;
-
-    /**
      * Constructor
      *
-     * @param DriverInterface               $driver The beryllium driver.
+     * @param DriverInterface $driver The beryllium driver.
+     * 
      * @return void 
      */
-    public function __construct(DriverInterface $driver)
+    public function __construct(private DriverInterface $driver)
     {
-        $this->driver = $driver;
     }
 
     /**
      * Creates a mutex with the given key and the locker assigned driver
      *
-     * @param string                $lockkey
+     * @param string $lockkey
+     * 
      * @return Mutex
      */
     public function mutex(string $lockkey) : Mutex

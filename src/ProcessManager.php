@@ -5,116 +5,94 @@ namespace Beryllium;
 use Symfony\Component\Process\Process;
 
 class ProcessManager
-{	
-	/**
-	 * A queue instance
-	 *
-	 * @var Queue
-	 */
-	protected $queue;
+{
+    /**
+     * An array of workers
+     * 
+     * @var array<Process>
+     */
+    protected array $workers = [];
 
-	/**
-	 * An array of workers
-	 *
-	 * @var array<Process>
-	 */
-	protected $workers = [];
+    /**
+     * Maximum number of workers
+     */
+    protected int $maxWorkers = 32;
 
-	/**
-	 * Maximum number of workers
-	 *
-	 * @var int
-	 */
-	protected $maxWorkers = 32;
+    /**
+     * Should we exit the main loop
+     */
+    protected bool $shouldExit = false;
 
-	/**
-	 * Should we exit the main loop
-	 *
-	 * @var bool
-	 */
-	protected $shouldExit = false;
+    /**
+     * Idle wait in microseconds
+     */
+    protected int $idleWait = 10000;
 
-	/**
-	 * Idle wait in microseconds
-	 *
-	 * @var int
-	 */
-	protected $idleWait = 10000;
+    /**
+     * Construct
+     *
+     * @param Queue $queue
+     * @param string $processPattern           
+     */
+    public function __construct(protected Queue $queue, protected string $processPattern)
+    {
+    }
 
-	/**
-	 * The process pattern
-	 *
-	 * @var string  
-	 */ 
-	protected $processPattern;	
+    /**
+     * Start the main loop
+     * ! This method is blocking !
+     *
+     * @return void
+     */
+    public function work(bool $verbose = false, bool $printWorkerOutput = false) : void
+    {
+        while (!$this->shouldExit)
+        {
+            usleep($this->idleWait);
 
-	/**
-	 * Construct
-	 *
-	 * @param Queue 			$queue
-     * @param string            $processPattern           
-	 */
-	public function __construct(Queue $queue, string $processPattern)
-	{
-		$this->queue = $queue;
-		$this->processPattern = $processPattern;
-	}
+            // check the worker status
+            foreach($this->workers as $jobId => $process) 
+            {
+                if (!$process->isRunning()) 
+                {
+                    // if the process failed we might retry
+                    if (!$process->isSuccessful()) {
+                        if ($verbose) echo "[{$jobId}] failed\n";
+                        $this->queue->considerRetry($jobId);
+                    } else {
+                        if ($verbose) echo "[{$jobId}] success\n";
+                        $this->queue->done($jobId);
+                    }
 
-	/**
-	 * Start the main loop
-	 * ! This method is blocking !
-	 *
-	 * @return void
-	 */
-	public function work(bool $verbose = false, bool $printWorkerOutput = false)
-	{
-		while(!$this->shouldExit)
-		{
-			usleep($this->idleWait);
+                    if ($printWorkerOutput) echo "[{$jobId}] {$process->getOutput()}\n";
 
-			// check the worker status
-			foreach($this->workers as $jobId => $process) 
-			{
-				if (!$process->isRunning()) 
-				{
-					// if the process failed we might retry
-					if (!$process->isSuccessful()) {
-						if ($verbose) echo "[{$jobId}] failed\n";
-						$this->queue->considerRetry($jobId);
-					} else {
-						if ($verbose) echo "[{$jobId}] success\n";
-						$this->queue->done($jobId);
-					}
-
-					if ($printWorkerOutput) echo "[{$jobId}] {$process->getOutput()}\n";
-
-					unset($this->workers[$jobId]);
+                    unset($this->workers[$jobId]);
 
                     // update the number of active jobs
                     $this->queue->statsSetActiveWorkers(count($this->workers));
-				}
-			}
+                }
+            }
 
-			if (count($this->workers) >= $this->maxWorkers) {
-				continue;
-			}
+            if (count($this->workers) >= $this->maxWorkers) {
+                continue;
+            }
 
-			// get the next job
-			if (!$jobId = $this->queue->getNextJobId()) {
-				continue;
-			}
+            // get the next job
+            if (!$jobId = $this->queue->getNextJobId()) {
+                continue;
+            }
 
-			$process = new Process(explode(' ', sprintf($this->processPattern, $jobId)));
-			$process->start();
+            $process = new Process(explode(' ', sprintf($this->processPattern, $jobId)));
+            $process->start();
 
-			$this->workers[$jobId] = $process;
+            $this->workers[$jobId] = $process;
 
-			if ($verbose) echo "[{$jobId}] starting\n";
+            if ($verbose) echo "[{$jobId}] starting\n";
 
-			// update the number of active jobs
-			$this->queue->statsSetActiveWorkers(count($this->workers));
-		}
-	}
+            // update the number of active jobs
+            $this->queue->statsSetActiveWorkers(count($this->workers));
+        }
+    }
 
     /**
      * Get the sleeptime
@@ -129,10 +107,11 @@ class ProcessManager
     /**
      * Set the sleep time in microseconds
      *
-     * @param int 			$idleWait
+     * @param int $idleWait
+     * 
      * @return self
      */
-    public function setIdleWait(int $idleWait)
+    public function setIdleWait(int $idleWait) : self
     {
         $this->idleWait = $idleWait; return $this;
     }
@@ -150,10 +129,11 @@ class ProcessManager
     /**
      * Set maximum allowed number of concurrent workers
      *
-     * @param int 			$maxWorkers
+     * @param int $maxWorkers
+     * 
      * @return self
      */
-    public function setMaxWorkers(int $maxWorkers)
+    public function setMaxWorkers(int $maxWorkers) : self
     {
         $this->maxWorkers = $maxWorkers; return $this;
     }

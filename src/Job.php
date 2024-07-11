@@ -6,117 +6,93 @@ use Beryllium\Exception\InvalidJobException;
 
 class Job
 {
-	/**
-	 * Unserialize the given data to a job
-	 * 
-	 * @param string 				$data
-	 * @return Job
-	 */
-	public static function unserialize(string $data) : ?Job
-	{
-		$data = json_decode($data, true); 
+    /**
+     * Construct
+     *
+     * @param string $id
+     * @param string $action
+     * @param array<mixed> $parameters
+     */
+    public function __construct(private string $id, private string $action, private array $parameters = [])
+    {
+    }
 
-		if (
-			(!isset($data['id'])) || 
-			(!isset($data['action'])) || 
-			(!isset($data['data']))
-		) {
-			return null;
-		}
+    /**
+     * Get the jobs id
+     *
+     * @return string 
+     */
+    public function id() : string
+    {
+        return $this->id;
+    }
 
-		return new Job($data['id'], $data['action'], $data['data']);
-	}
+    /**
+     * Get the jobs action
+     *
+     * @return string
+     */
+    public function action() : string
+    {
+        return $this->action;
+    }
 
-	/**
-	 * The jobs id
-	 *
-	 * @var string
-	 */
-	private string $id;
+    /**
+     * Get the jobs parameters
+     *
+     * @return array<mixed>
+     */
+    public function parameters() : array
+    {
+        return $this->parameters;
+    }
 
-	/**
-	 * The jobs action
-	 *
-	 * @var string
-	 */
-	private string $action;
+    /**
+     * Get a specific parameter from the job
+     *
+     * @param string $key
+     * @param mixed $default 
+     * 
+     * @return mixed
+     */
+    public function parameter(string $key, $default = null) : mixed
+    {
+        return $this->parameters[$key] ?? $default;
+    }
 
-	/**
-	 * The jobs parameters
-	 *
-	 * @var array<mixed>
-	 */
-	private array $parameters;
+    /** 
+     * Serialize the Job
+     *
+     * @return string
+     * 
+     * @throws InvalidJobException
+     */
+    public function serialize() : string
+    {
+        if (($serialized = json_encode(['id' => $this->id, 'action' => $this->action, 'data' => $this->parameters])) === false) {
+            throw new InvalidJobException("Could not serialize Beryllium Job with ID '{$this->id}'. " . json_last_error_msg());
+        }
 
-	/**
-	 * Construct
-	 *
-	 * @param string 			$id
-	 * @param string 			$action
-	 * @param array<mixed> 		$parameters
-	 */
-	public function __construct(string $id, string $action, array $parameters = [])
-	{
-		$this->id = $id;
-		$this->action = $action;
-		$this->parameters = $parameters;
-	}
+        return $serialized;
+    }
 
-	/**
-	 * Get the jobs id
-	 *
-	 * @return string 
-	 */
-	public function id() : string
-	{
-		return $this->id;
-	}
+    /**
+     * Unserialize the given data to a job
+     * 
+     * @param string $data
+     * 
+     * @return Job|null
+     */
+    public static function unserialize(string $data) : ?Job
+    {
+        $data = json_decode($data, true); 
 
-	/**
-	 * Get the jobs action
-	 *
-	 * @return string
-	 */
-	public function action() : string
-	{
-		return $this->action;
-	}
+        if ((!isset($data['id'])) || 
+            (!isset($data['action'])) || 
+            (!isset($data['data']))) {
+            return null;
+        }
 
-	/**
-	 * Get the jobs parameters
-	 *
-	 * @return array<mixed>
-	 */
-	public function parameters() : array
-	{
-		return $this->parameters;
-	}
-
-	/**
-	 * Get a specific parameter from the job
-	 *
-	 * @param string 				$key
-	 * @param mixed 				$default 
-	 * @return mixed
-	 */
-	public function parameter(string $key, $default = null)
-	{
-		return $this->parameters[$key] ?? $default;
-	}
-
-	/** 
-	 * Serialize the Job
-	 *
-	 * @throws InvalidJobException
-	 *
-	 * @return string
-	 */
-	public function serialize() : string
-	{
-		if (($serialized = json_encode(['id' => $this->id, 'action' => $this->action, 'data' => $this->parameters])) === false) {
-			throw new InvalidJobException("Could not serialize Beryllium Job with ID '{$this->id}'. " . json_last_error_msg());
-		}
-
-		return $serialized;
-	}
+        return new Job($data['id'], $data['action'], $data['data']);
+    }
 }

@@ -15,8 +15,9 @@ interface DriverInterface
     /**
      * Adds the given Job to the queue
      *
-     * @param Job           $job
-     * @param int           $maxRetries
+     * @param Job $job
+     * @param int $maxRetries
+     * 
      * @return void
      */
     public function add(Job $job, int $maxRetries = 3) : void;
@@ -24,10 +25,20 @@ interface DriverInterface
     /**
      * Get a job instance by the given id.
      *
-     * @param string            $id The Job identifier.
-     * @return Job
+     * @param string $id The Job identifier.
+     * 
+     * @return Job|null
      */
     public function get(string $id) : ?Job;
+
+    /**
+     * Check if a job exists in the queue
+     * 
+     * @param string $id The Job identifier.
+     * 
+     * @return bool 
+     */
+    public function exists(string $id) : bool;
 
     /**
      * Get the ID of a waiting job
@@ -46,7 +57,8 @@ interface DriverInterface
     /**
      * Reinsert the job into the waitlist
      *
-     * @param string            $id The Job identifier.
+     * @param string $id The Job identifier.
+     * 
      * @return void
      */
     public function retry(string $id) : void;
@@ -54,23 +66,26 @@ interface DriverInterface
     /**
      * Get the maximum number of attempts we should try for the job
      *
-     * @param string                $id The Job identifier.
-     * @return int                      Returns -1 if the job has never been executed
+     * @param string $id The Job identifier.
+     * 
+     * @return int Returns -1 if the job has never been executed
      */
     public function getMaxRetries(string $id) : int;
 
     /**
      * Get the number of attempts this job already had.
      *
-     * @param string            $id The Job identifier.
-     * @return int                  Returns -1 if the job has never been executed
+     * @param string $id The Job identifier.
+     * 
+     * @return int Returns -1 if the job has never been executed
      */
     public function attemptCount(string $id) : int;
 
     /**
      * Cleanup the jobs data
      *
-     * @param string            $id The Job identifier.
+     * @param string $id The Job identifier.
+     * 
      * @return void
      */
     public function cleanup(string $id) : void;
@@ -92,8 +107,9 @@ interface DriverInterface
     /**
      * Simply store a value
      *
-     * @param string            $key
-     * @param mixed             $value
+     * @param string $key
+     * @param mixed $value
+     * 
      * @return void
      */
     public function storeStatsValue(string $key, $value) : void;
@@ -101,10 +117,11 @@ interface DriverInterface
     /**
      * Simply get a value
      *
-     * @param string            $key
+     * @param string $key
+     * 
      * @return mixed
      */
-    public function getStatsValue(string $key);
+    public function getStatsValue(string $key) : mixed;
 
     /**
      * Locking System Methods
@@ -115,7 +132,8 @@ interface DriverInterface
     /**
      * Checks if the given key is locked on the driver.
      *
-     * @param string                    $key
+     * @param string $key
+     * 
      * @return bool
      */
     public function isLocked(string $key) : bool;
@@ -123,17 +141,18 @@ interface DriverInterface
     /**
      * Returns the locks token
      *
-     * @param string                    $key
-     * @return string
+     * @param string $key
+     * 
+     * @return string|null
      */
     public function getLockToken(string $key) : ?string;
 
     /**
      * Creates a lock entry on the driver, this must be synchronised!
      *
-     * @param string                $key
-     * @param string                $token
-     * @param int                   $ttl
+     * @param string $key
+     * @param string $token
+     * @param int $ttl
      *
      * @return bool Returns true if the lock could be created
      */
@@ -143,8 +162,8 @@ interface DriverInterface
      * Removes a lock entry on the driver, this must be synchronised!
      * Also the lock for the key should only be removed if the token matches!
      *
-     * @param string                $key
-     * @param string                $token
+     * @param string $key
+     * @param string $token
      *
      * @return bool Retruns true if the lock could be removed.
      */
