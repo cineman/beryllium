@@ -16,6 +16,16 @@ class Queue
     }
 
     /**
+     * Returns the driver the queue is stored in
+     *
+     * @return DriverInterface
+     */
+    public function getDriver() : DriverInterface
+    {
+        return $this->driver;
+    }
+
+    /**
      * Retrieve the id of the next job or null if there is nothing todo
      *
      * @return string|null

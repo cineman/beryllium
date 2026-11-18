@@ -4,6 +4,7 @@ namespace Beryllium\Tests;
 
 use Redis;
 use Beryllium\{Queue};
+use Beryllium\Driver\PHPArrayDriver;
 use Beryllium\Driver\RedisDriver;
 
 class QueueTest extends \PHPUnit\Framework\TestCase
@@ -46,5 +47,13 @@ class QueueTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(4, $queue->statsGetValue('active_workers'));
         $queue->statsSetValue('active_workers', 8);
         $this->assertEquals(8, $queue->statsGetValue('active_workers'));
+    }
+
+    public function testGetDriverReturnsTheDriverTheQueueWraps()
+    {
+        $driver = new PHPArrayDriver;
+        $queue = new Queue($driver);
+
+        $this->assertSame($driver, $queue->getDriver());
     }
 }
